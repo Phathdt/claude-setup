@@ -180,17 +180,38 @@ if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
       block_end_date="today"
     fi
 
-    # Calculate remaining time until block reset
+    # Calculate remaining time until block reset (cross-platform)
     now_sec=$(date +%s)
-    block_end_sec=$(date -u -d "${block_end_date} ${block_end}:00 UTC" +%s 2>/dev/null)
 
-    if [ -n "$block_end_sec" ] && [ "$block_end_sec" -gt 0 ]; then
+    # Build block end epoch - cross-platform (macOS BSD date + GNU date)
+    block_end_sec=""
+    if [ "$block_end_date" = "tomorrow" ]; then
+      # Tomorrow at block_end:00 UTC
+      if date -r 0 +%s >/dev/null 2>&1; then
+        # macOS BSD date: get today midnight UTC, add 1 day + hours
+        today_midnight_utc=$(date -u -j -f "%H:%M:%S" "00:00:00" +%s 2>/dev/null)
+        block_end_sec=$((today_midnight_utc + 86400 + block_end * 3600))
+      else
+        block_end_sec=$(date -u -d "tomorrow ${block_end}:00 UTC" +%s 2>/dev/null)
+      fi
+    else
+      # Today at block_end:00 UTC
+      if date -r 0 +%s >/dev/null 2>&1; then
+        # macOS BSD date
+        today_midnight_utc=$(date -u -j -f "%H:%M:%S" "00:00:00" +%s 2>/dev/null)
+        block_end_sec=$((today_midnight_utc + block_end * 3600))
+      else
+        block_end_sec=$(date -u -d "today ${block_end}:00 UTC" +%s 2>/dev/null)
+      fi
+    fi
+
+    if [ -n "$block_end_sec" ] && [ "$block_end_sec" -gt 0 ] 2>/dev/null; then
       remaining=$((block_end_sec - now_sec))
 
       if [ $remaining -gt 0 ] && [ $remaining -lt 18000 ]; then
         rh=$((remaining / 3600))
         rm=$(((remaining % 3600) / 60))
-        block_end_local=$(date -d "@${block_end_sec}" +"%H:%M" 2>/dev/null)
+        block_end_local=$(fmt_time_hm "$block_end_sec")
         session_txt="${rh}h ${rm}m until reset at ${block_end_local}"
       fi
     fi

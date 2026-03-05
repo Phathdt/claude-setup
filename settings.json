@@ -127,7 +127,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": ".claude/statusline.sh",
+    "command": "~/.claude/statusline.sh",
     "padding": 0
   },
   "includeCoAuthoredBy": false
