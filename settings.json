@@ -7,6 +7,16 @@
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
   },
   "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/scripts/notify-telegram.sh\" stop"
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "matcher": "Plan",
@@ -14,6 +24,15 @@
           {
             "type": "command",
             "command": "node \"$HOME/.claude/hooks/cook-after-plan-reminder.cjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/scripts/notify-telegram.sh\" subagent"
           }
         ]
       }
