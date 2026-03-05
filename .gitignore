@@ -1,0 +1,22 @@
+projects
+todos
+shell-snapshots
+statsig
+ide
+.credentials.json
+debug
+file-history
+history.jsonl
+plans
+session-env
+telemetry
+
+# Node modules and package manager files
+node_modules
+pnpm-lock.yaml
+stats-cache.json
+cache
+paste-cache
+plugins
+tasks
+/.claude.json
