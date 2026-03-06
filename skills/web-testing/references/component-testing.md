@@ -74,7 +74,7 @@ await waitFor(() => expect(screen.getByText('Done')).toBeInTheDocument());
 
 ```javascript
 vi.mock('./api', () => ({
-  fetchUser: vi.fn().mockResolvedValue({ name: 'John' })
+  fetchUser: vi.fn().mockResolvedValue({ name: 'John' }),
 }));
 
 render(

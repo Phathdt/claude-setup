@@ -1,7 +1,7 @@
 ---
 name: preview
-description: "View files/directories OR generate visual explanations, slides, diagrams."
-argument-hint: "[path] OR --explain|--slides|--diagram|--ascii [topic]"
+description: 'View files/directories OR generate visual explanations, slides, diagrams.'
+argument-hint: '[path] OR --explain|--slides|--diagram|--ascii [topic]'
 ---
 
 # Preview
@@ -12,25 +12,27 @@ Universal viewer + visual generator. View existing content OR generate new visua
 
 If invoked without arguments, use `AskUserQuestion` to present available preview operations:
 
-| Operation | Description |
-|-----------|-------------|
-| `(view)` | View a file or directory |
-| `--explain` | Generate visual explanation |
-| `--slides` | Generate presentation slides |
+| Operation   | Description                   |
+| ----------- | ----------------------------- |
+| `(view)`    | View a file or directory      |
+| `--explain` | Generate visual explanation   |
+| `--slides`  | Generate presentation slides  |
 | `--diagram` | Generate architecture diagram |
-| `--ascii` | Terminal-friendly diagram |
-| `--stop` | Stop preview server |
+| `--ascii`   | Terminal-friendly diagram     |
+| `--stop`    | Stop preview server           |
 
 Present as options via `AskUserQuestion` with header "Preview Operation", question "What would you like to do?".
 
 ## Usage
 
 ### View Mode
+
 - `/preview <file.md>` - View markdown file in novel-reader UI
 - `/preview <directory/>` - Browse directory contents
 - `/preview --stop` - Stop running server
 
 ### Generation Mode
+
 - `/preview --explain <topic>` - Generate visual explanation (ASCII + Mermaid + prose)
 - `/preview --slides <topic>` - Generate presentation slides (one concept per slide)
 - `/preview --diagram <topic>` - Generate focused diagram (ASCII + Mermaid)
@@ -49,6 +51,7 @@ When processing arguments, follow this priority order:
 5. **Path doesn't exist or can't resolve** → Ask user to clarify
 
 **Topic-to-slug conversion:**
+
 - Lowercase the topic
 - Replace spaces/special chars with hyphens
 - Remove non-alphanumeric except hyphens
@@ -62,14 +65,14 @@ When processing arguments, follow this priority order:
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Invalid topic (empty) | Ask user to provide a topic |
-| Flag without topic | Ask user: "Please provide a topic: `/preview --explain <topic>`" |
-| Topic becomes empty after sanitization | Ask for topic with alphanumeric characters |
-| File write failure | Report error, suggest checking permissions |
-| Server startup failure | Check if port in use, try `/preview --stop` first |
-| No generation flag + unresolvable reference | Ask user to clarify which file they meant |
-| Existing file at output path | Overwrite with new content (no prompt) |
-| Server already running | Reuse existing server instance, just open new URL |
-| Parent `plans/` dir missing | Create directories recursively before write |
+| Error                                       | Action                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| Invalid topic (empty)                       | Ask user to provide a topic                                      |
+| Flag without topic                          | Ask user: "Please provide a topic: `/preview --explain <topic>`" |
+| Topic becomes empty after sanitization      | Ask for topic with alphanumeric characters                       |
+| File write failure                          | Report error, suggest checking permissions                       |
+| Server startup failure                      | Check if port in use, try `/preview --stop` first                |
+| No generation flag + unresolvable reference | Ask user to clarify which file they meant                        |
+| Existing file at output path                | Overwrite with new content (no prompt)                           |
+| Server already running                      | Reuse existing server instance, just open new URL                |
+| Parent `plans/` dir missing                 | Create directories recursively before write                      |

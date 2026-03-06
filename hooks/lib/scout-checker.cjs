@@ -21,10 +21,12 @@ const { detectBroadPatternIssue } = require('../scout-block/broad-pattern-detect
 
 // Build command allowlist - these are allowed even if they contain blocked paths
 // Handles flags and filters: npm build, pnpm --filter web run build, yarn workspace app build
-const BUILD_COMMAND_PATTERN = /^(npm|pnpm|yarn|bun)\s+([^\s]+\s+)*(run\s+)?(build|test|lint|dev|start|install|ci|add|remove|update|publish|pack|init|create|exec)/;
+const BUILD_COMMAND_PATTERN =
+  /^(npm|pnpm|yarn|bun)\s+([^\s]+\s+)*(run\s+)?(build|test|lint|dev|start|install|ci|add|remove|update|publish|pack|init|create|exec)/;
 
 // Tool commands - JS/TS, Go, Rust, Java, .NET, containers, IaC, Python, Ruby, PHP, Deno, Elixir
-const TOOL_COMMAND_PATTERN = /^(\.\/)?(npx|pnpx|bunx|tsc|esbuild|vite|webpack|rollup|turbo|nx|jest|vitest|mocha|eslint|prettier|go|cargo|make|mvn|mvnw|gradle|gradlew|dotnet|docker|podman|kubectl|helm|terraform|ansible|bazel|cmake|sbt|flutter|swift|ant|ninja|meson|python3?|pip|uv|deno|bundle|rake|gem|php|composer|ruby|mix|elixir)/;
+const TOOL_COMMAND_PATTERN =
+  /^(\.\/)?(npx|pnpx|bunx|tsc|esbuild|vite|webpack|rollup|turbo|nx|jest|vitest|mocha|eslint|prettier|go|cargo|make|mvn|mvnw|gradle|gradlew|dotnet|docker|podman|kubectl|helm|terraform|ansible|bazel|cmake|sbt|flutter|swift|ant|ninja|meson|python3?|pip|uv|deno|bundle|rake|gem|php|composer|ruby|mix|elixir)/;
 
 // Allow execution from .venv/bin/ or venv/bin/ (Unix) and .venv/Scripts/ or venv/Scripts/ (Windows)
 const VENV_EXECUTABLE_PATTERN = /(^|[\/\\])\.?venv[\/\\](bin|Scripts)[\/\\]/;
@@ -34,7 +36,8 @@ const VENV_EXECUTABLE_PATTERN = /(^|[\/\\])\.?venv[\/\\](bin|Scripts)[\/\\]/;
 // - py -m venv (Windows py launcher, supports -3, -3.11, etc.)
 // - uv venv (fast Rust-based Python package manager)
 // - virtualenv (legacy but still widely used)
-const VENV_CREATION_PATTERN = /^(python3?|py)\s+(-[\w.]+\s+)*-m\s+venv\s+|^uv\s+venv(\s|$)|^virtualenv\s+/;
+const VENV_CREATION_PATTERN =
+  /^(python3?|py)\s+(-[\w.]+\s+)*-m\s+venv\s+|^uv\s+venv(\s|$)|^virtualenv\s+/;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -80,7 +83,7 @@ function isBuildCommand(command) {
  */
 function splitCompoundCommand(command) {
   if (!command || typeof command !== 'string') return [];
-  return command.split(/\s*(?:&&|\|\||;)\s*/).filter(cmd => cmd && cmd.trim().length > 0);
+  return command.split(/\s*(?:&&|\|\||;)\s*/).filter((cmd) => cmd && cmd.trim().length > 0);
 }
 
 /**
@@ -91,9 +94,7 @@ function splitCompoundCommand(command) {
  */
 function unwrapShellExecutor(command) {
   if (!command || typeof command !== 'string') return command;
-  const match = command.trim().match(
-    /^(?:(?:bash|sh|zsh)\s+-c|eval)\s+["'](.+)["']\s*$/
-  );
+  const match = command.trim().match(/^(?:(?:bash|sh|zsh)\s+-c|eval)\s+["'](.+)["']\s*$/);
   return match ? match[1] : command;
 }
 
@@ -156,7 +157,7 @@ function checkScoutBlock({ toolName, toolInput, options = {} }) {
   const {
     ckignorePath,
     claudeDir = path.join(process.cwd(), '.claude'),
-    checkBroadPatterns = true
+    checkBroadPatterns = true,
   } = options;
 
   // Unwrap shell executor wrappers (bash -c "...", eval "...")
@@ -175,7 +176,7 @@ function checkScoutBlock({ toolName, toolInput, options = {} }) {
   // anchor and would match the prefix of "npm run build && cat dist/file.js".
   if (toolInput.command) {
     const subCommands = splitCompoundCommand(toolInput.command);
-    const nonAllowed = subCommands.filter(cmd => !isAllowedCommand(cmd.trim()));
+    const nonAllowed = subCommands.filter((cmd) => !isAllowedCommand(cmd.trim()));
     if (nonAllowed.length === 0) {
       return { blocked: false, isAllowedCommand: true };
     }
@@ -194,7 +195,7 @@ function checkScoutBlock({ toolName, toolInput, options = {} }) {
         isBroadPattern: true,
         pattern: toolInput.pattern,
         reason: broadResult.reason || 'Pattern too broad - may fill context with too many files',
-        suggestions: broadResult.suggestions || []
+        suggestions: broadResult.suggestions || [],
       };
     }
   }
@@ -222,7 +223,7 @@ function checkScoutBlock({ toolName, toolInput, options = {} }) {
         blocked: true,
         path: extractedPath,
         pattern: result.pattern,
-        reason: `Path matches blocked pattern: ${result.pattern}`
+        reason: `Path matches blocked pattern: ${result.pattern}`,
       };
     }
   }
@@ -259,5 +260,5 @@ module.exports = {
   BUILD_COMMAND_PATTERN,
   TOOL_COMMAND_PATTERN,
   VENV_EXECUTABLE_PATTERN,
-  VENV_CREATION_PATTERN
+  VENV_CREATION_PATTERN,
 };

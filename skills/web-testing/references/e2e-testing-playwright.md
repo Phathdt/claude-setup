@@ -38,21 +38,22 @@ test.describe('User Login', () => {
 ```typescript
 // fixtures/auth.ts
 export const test = baseTest.extend<{ authPage: Page }>({
-  authPage: [async ({ browser, request }, use, testInfo) => {
-    // API login per worker
-    const res = await request.post('/api/auth', {
-      data: { email: 'test@example.com', password: 'pass' }
-    });
-    const { token } = await res.json();
+  authPage: [
+    async ({ browser, request }, use, testInfo) => {
+      // API login per worker
+      const res = await request.post('/api/auth', {
+        data: { email: 'test@example.com', password: 'pass' },
+      });
+      const { token } = await res.json();
 
-    const context = await browser.newContext();
-    await context.addCookies([
-      { name: 'token', value: token, domain: 'localhost', path: '/' }
-    ]);
-    const page = await context.newPage();
-    await use(page);
-    await context.close();
-  }, { scope: 'worker' }]
+      const context = await browser.newContext();
+      await context.addCookies([{ name: 'token', value: token, domain: 'localhost', path: '/' }]);
+      const page = await context.newPage();
+      await use(page);
+      await context.close();
+    },
+    { scope: 'worker' },
+  ],
 });
 ```
 
@@ -75,7 +76,7 @@ await responsePromise;
 ### Mock API
 
 ```typescript
-await page.route('**/api/users', route =>
+await page.route('**/api/users', (route) =>
   route.fulfill({ status: 200, body: JSON.stringify([]) })
 );
 ```

@@ -124,8 +124,12 @@ const user = { email: faker.internet.email() };
 
 // BAD: Shared mutable state
 let globalUser;
-beforeAll(() => { globalUser = createUser(); });
+beforeAll(() => {
+  globalUser = createUser();
+});
 
 // GOOD: Fresh data per test
-beforeEach(() => { user = userFactory.build(); });
+beforeEach(() => {
+  user = userFactory.build();
+});
 ```

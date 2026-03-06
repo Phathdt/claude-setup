@@ -39,7 +39,7 @@ const current = readSessionState(sessionId) || {};
 const success = writeSessionState(sessionId, {
   ...current,
   activePlan: absolutePlan,
-  timestamp: Date.now()
+  timestamp: Date.now(),
 });
 
 if (success) {

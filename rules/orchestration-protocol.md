@@ -9,6 +9,7 @@ When spawning subagents via Task tool, **ALWAYS** include in prompt:
 3. **Plans Path**: `{work_context}/plans/` for that project
 
 **Example:**
+
 ```
 Task prompt: "Fix parser bug.
 Work context: /path/to/project-b
@@ -21,14 +22,18 @@ Plans: /path/to/project-b/plans/"
 ---
 
 #### Sequential Chaining
+
 Chain subagents when tasks have dependencies or require outputs from previous steps:
+
 - **Planning → Implementation → Simplification → Testing → Review**: Use for feature development (tests verify simplified code)
 - **Research → Design → Code → Documentation**: Use for new system components
 - Each agent completes fully before the next begins
 - Pass context and outputs between agents in the chain
 
 #### Parallel Execution
+
 Spawn multiple subagents simultaneously for independent tasks:
+
 - **Code + Tests + Docs**: When implementing separate, non-conflicting components
 - **Multiple Feature Branches**: Different agents working on isolated features
 - **Cross-platform Development**: iOS and Android specific implementations

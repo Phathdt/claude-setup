@@ -82,7 +82,7 @@ If not authenticated, guide user to run `gh auth login`.
    git push -u origin $(git branch --show-current)
    ```
 
-6. **Determine base branch** (in order of priority):
+5. **Determine base branch** (in order of priority):
    - If user specifies: use that branch
    - Auto-detect from git log:
      ```bash
@@ -94,13 +94,13 @@ If not authenticated, guide user to run `gh auth login`.
      ```
    - Fallback: `main`
 
-8. **Get commit history for PR body**:
+6. **Get commit history for PR body**:
 
    ```bash
    git log --oneline $(git merge-base HEAD origin/{base})..HEAD
    ```
 
-9. **Create PR with detailed body**:
+7. **Create PR with detailed body**:
 
    ```bash
    gh pr create --title "feat: descriptive title" --body "$(cat <<'EOF'

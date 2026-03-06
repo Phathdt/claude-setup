@@ -5,7 +5,9 @@ Fast debug-fix-review cycle for simple issues.
 ## Steps
 
 ### Step 1: Debug
+
 Activate `debug` skill. Find root cause quickly. Verify the root cause with multiple `Explore` subagents in parallel.
+
 - Read error message/logs
 - Locate affected file(s)
 - Identify exact fix needed
@@ -13,12 +15,15 @@ Activate `debug` skill. Find root cause quickly. Verify the root cause with mult
 **Output:** `✓ Step 1: Root cause - [brief description]`
 
 ### Step 2: Fix & Verify
+
 Implement the fix directly.
+
 - Make minimal changes
 - Follow existing patterns
 
 **Parallel Verification:**
 Launch `Bash` agents in parallel:
+
 ```
 Task("Bash", "Run typecheck", "Verify types")
 Task("Bash", "Run lint", "Verify lint")
@@ -29,6 +34,7 @@ See `references/parallel-exploration.md` for patterns.
 **Output:** `✓ Step 2: Fixed - [N] files, verified (types/lint passed)`
 
 ### Step 3: Verify
+
 Use `code-reviewer` subagent for quick review.
 
 Prompt: "Quick review of fix for [issue]. Check: correctness, security, no regressions. Score X/10."
@@ -38,6 +44,7 @@ Prompt: "Quick review of fix for [issue]. Check: correctness, security, no regre
 **Output:** `✓ Step 3: Review [score]/10 - [status]`
 
 ### Step 4: Complete
+
 Report summary to user.
 
 **If autonomous mode:** Ask to commit via `git-manager` subagent if score >= 9.0

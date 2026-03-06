@@ -1,7 +1,7 @@
 ---
 name: test
-description: "Run unit, integration, e2e, and UI tests. Use for test execution, coverage analysis, build verification, visual regression, and QA reports."
-argument-hint: "[context] OR ui [url]"
+description: 'Run unit, integration, e2e, and UI tests. Use for test execution, coverage analysis, build verification, visual regression, and QA reports.'
+argument-hint: '[context] OR ui [url]'
 version: 1.0.0
 ---
 
@@ -13,10 +13,10 @@ Comprehensive testing framework covering code-level testing (unit, integration, 
 
 If invoked with context (test scope), proceed with testing. If invoked WITHOUT arguments, use `AskUserQuestion` to present available test operations:
 
-| Operation | Description |
-|-----------|-------------|
+| Operation   | Description                    |
+| ----------- | ------------------------------ |
 | `(default)` | Run unit/integration/e2e tests |
-| `ui` | Run UI tests on a website |
+| `ui`        | Run UI tests on a website      |
 
 Present as options via `AskUserQuestion` with header "Test Operation", question "What would you like to do?".
 
@@ -102,6 +102,7 @@ Use naming pattern from `## Naming` section injected by hooks.
 ## Team Mode
 
 When operating as teammate:
+
 1. On start: check `TaskList`, claim assigned/next unblocked task via `TaskUpdate`
 2. Read full task description via `TaskGet` before starting
 3. Wait for blocked tasks (implementation) to complete before testing

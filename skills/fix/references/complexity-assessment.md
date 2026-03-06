@@ -7,6 +7,7 @@ Classify issue complexity before routing to workflow.
 ### Simple (→ workflow-quick.md) — No Tasks
 
 **Indicators:**
+
 - Single file affected
 - Clear error message (type error, syntax, lint)
 - Keywords: `type`, `typescript`, `tsc`, `lint`, `eslint`, `syntax`
@@ -16,6 +17,7 @@ Classify issue complexity before routing to workflow.
 **Task usage:** Skip. < 3 steps, overhead exceeds benefit.
 
 **Examples:**
+
 - "Fix type error in auth.ts"
 - "ESLint errors after upgrade"
 - "Syntax error in config file"
@@ -23,6 +25,7 @@ Classify issue complexity before routing to workflow.
 ### Moderate (→ workflow-standard.md) — Use Tasks
 
 **Indicators:**
+
 - 2-5 files affected
 - Root cause unclear but localized
 - Needs debugging investigation
@@ -32,6 +35,7 @@ Classify issue complexity before routing to workflow.
 **Task usage:** Create 6 phase tasks with dependencies. See `references/task-orchestration.md`.
 
 **Examples:**
+
 - "Login sometimes fails"
 - "API returns wrong data"
 - "Component not rendering correctly"
@@ -39,6 +43,7 @@ Classify issue complexity before routing to workflow.
 ### Complex (→ workflow-deep.md) — Use Tasks with Dependency Chains
 
 **Indicators:**
+
 - System-wide impact (5+ files)
 - Architecture decision needed
 - Research required for solution
@@ -49,6 +54,7 @@ Classify issue complexity before routing to workflow.
 **Task usage:** Create 8 phase tasks. Steps 1+2 run parallel (debug+research). Full dependency chains. See `references/task-orchestration.md`.
 
 **Examples:**
+
 - "Memory leak in production"
 - "Database deadlocks under load"
 - "Security vulnerability in auth flow"
@@ -56,9 +62,11 @@ Classify issue complexity before routing to workflow.
 ### Parallel (→ multiple fullstack-developer agents) — Use Task Trees
 
 **Triggers:**
+
 - `--parallel` flag explicitly passed (activate parallel routing regardless of auto-classification)
 
 **Indicators:**
+
 - 2+ independent issues mentioned
 - Issues in different areas (frontend + backend, auth + payments)
 - No dependencies between issues
@@ -67,6 +75,7 @@ Classify issue complexity before routing to workflow.
 **Task usage:** Create separate task trees per independent issue. Spawn `fullstack-developer` agent per tree. Agents coordinate via `TaskUpdate`/`TaskList`. See `references/task-orchestration.md`.
 
 **Examples:**
+
 - "Fix type errors AND update UI styling"
 - "Auth bug + payment integration issue"
 - "3 different test failures in unrelated modules"

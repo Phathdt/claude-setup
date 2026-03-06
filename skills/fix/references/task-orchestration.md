@@ -4,12 +4,12 @@ Native Claude Task tools for tracking and coordinating fix workflows.
 
 ## When to Use Tasks
 
-| Complexity | Use Tasks? | Reason |
-|-----------|-----------|--------|
-| Simple/Quick | No | < 3 steps, overhead exceeds benefit |
-| Moderate (Standard) | Yes | 6 steps, multi-subagent coordination |
-| Complex (Deep) | Yes | 8 steps, dependency chains, parallel agents |
-| Parallel | Yes | Multiple independent issue trees |
+| Complexity          | Use Tasks? | Reason                                      |
+| ------------------- | ---------- | ------------------------------------------- |
+| Simple/Quick        | No         | < 3 steps, overhead exceeds benefit         |
+| Moderate (Standard) | Yes        | 6 steps, multi-subagent coordination        |
+| Complex (Deep)      | Yes        | 8 steps, dependency chains, parallel agents |
+| Parallel            | Yes        | Multiple independent issue trees            |
 
 ## Task Tools
 
@@ -34,6 +34,7 @@ TaskCreate(subject="Finalize", activeForm="Finalizing", metadata={step: 6}, addB
 ```
 
 Update as work progresses:
+
 ```
 TaskUpdate(taskId=step1, status="in_progress")
 // ... do work ...
@@ -78,6 +79,7 @@ TaskCreate(subject="Integration verify",  addBlockedBy=[A-step3, B-step3])
 ```
 
 Spawn `fullstack-developer` subagents per issue tree. Each agent:
+
 1. Claims tasks via `TaskUpdate(status="in_progress")`
 2. Completes tasks via `TaskUpdate(status="completed")`
 3. Blocked tasks auto-unblock when dependencies resolve

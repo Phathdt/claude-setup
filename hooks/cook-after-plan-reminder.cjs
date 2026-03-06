@@ -21,40 +21,40 @@ try {
   }
 
   async function main() {
-  try {
-    const stdin = fs.readFileSync(0, 'utf-8').trim();
-    if (!stdin) process.exit(0);
+    try {
+      const stdin = fs.readFileSync(0, 'utf-8').trim();
+      if (!stdin) process.exit(0);
 
-    // Get active plan path from session state
-    const sessionId = process.env.CK_SESSION_ID;
-    let planPath = null;
+      // Get active plan path from session state
+      const sessionId = process.env.CK_SESSION_ID;
+      let planPath = null;
 
-    if (sessionId) {
-      const state = readSessionState(sessionId);
-      if (state?.activePlan) {
-        planPath = state.activePlan;
-        // Ensure it's absolute
-        if (!path.isAbsolute(planPath) && state.sessionOrigin) {
-          planPath = path.resolve(state.sessionOrigin, planPath);
+      if (sessionId) {
+        const state = readSessionState(sessionId);
+        if (state?.activePlan) {
+          planPath = state.activePlan;
+          // Ensure it's absolute
+          if (!path.isAbsolute(planPath) && state.sessionOrigin) {
+            planPath = path.resolve(state.sessionOrigin, planPath);
+          }
         }
       }
-    }
 
-    // Output reminder with full absolute path if available
-    console.log('MUST invoke /cook --auto skill before implementing the plan');
-    if (planPath) {
-      const planMdPath = path.join(planPath, 'plan.md');
-      console.log(`Best Practice: Run /clear then /cook ${planMdPath}`);
-    } else {
-      // Fallback when plan path unavailable
-      console.log('Best Practice: Run /clear then /cook {full-absolute-path-to-plan.md}');
-    }
+      // Output reminder with full absolute path if available
+      console.log('MUST invoke /cook --auto skill before implementing the plan');
+      if (planPath) {
+        const planMdPath = path.join(planPath, 'plan.md');
+        console.log(`Best Practice: Run /clear then /cook ${planMdPath}`);
+      } else {
+        // Fallback when plan path unavailable
+        console.log('Best Practice: Run /clear then /cook {full-absolute-path-to-plan.md}');
+      }
 
-    process.exit(0);
-  } catch (error) {
-    // Silent fail - non-blocking
-    process.exit(0);
-  }
+      process.exit(0);
+    } catch (error) {
+      // Silent fail - non-blocking
+      process.exit(0);
+    }
   }
 
   main();
@@ -65,8 +65,15 @@ try {
     const p = require('path');
     const logDir = p.join(__dirname, '.logs');
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(p.join(logDir, 'hook-log.jsonl'),
-      JSON.stringify({ ts: new Date().toISOString(), hook: p.basename(__filename, '.cjs'), status: 'crash', error: e.message }) + '\n');
+    fs.appendFileSync(
+      p.join(logDir, 'hook-log.jsonl'),
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        hook: p.basename(__filename, '.cjs'),
+        status: 'crash',
+        error: e.message,
+      }) + '\n'
+    );
   } catch (_) {}
   process.exit(0); // fail-open
 }

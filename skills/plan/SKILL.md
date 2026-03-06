@@ -1,7 +1,7 @@
 ---
 name: plan
-description: "Plan implementations, design architectures, create technical roadmaps with detailed phases. Use for feature planning, system design, solution architecture, implementation strategy, phase documentation."
-argument-hint: "[task] OR archive|red-team|validate"
+description: 'Plan implementations, design architectures, create technical roadmaps with detailed phases. Use for feature planning, system design, solution architecture, implementation strategy, phase documentation.'
+argument-hint: '[task] OR archive|red-team|validate'
 license: MIT
 ---
 
@@ -13,12 +13,12 @@ Create detailed technical implementation plans through research, codebase analys
 
 If invoked with a task description, proceed with planning workflow. If invoked WITHOUT arguments or with unclear intent, use `AskUserQuestion` to present available operations:
 
-| Operation | Description |
-|-----------|-------------|
+| Operation   | Description                           |
+| ----------- | ------------------------------------- |
 | `(default)` | Create implementation plan for a task |
-| `archive` | Write journal entry & archive plans |
-| `red-team` | Adversarial plan review |
-| `validate` | Critical questions interview |
+| `archive`   | Write journal entry & archive plans   |
+| `red-team`  | Adversarial plan review               |
+| `validate`  | Critical questions interview          |
 
 Present as options via `AskUserQuestion` with header "Planning Operation", question "What would you like to do?".
 
@@ -26,13 +26,13 @@ Present as options via `AskUserQuestion` with header "Planning Operation", quest
 
 Default: `--auto` (analyze task complexity and auto-pick mode).
 
-| Flag | Mode | Research | Red Team | Validation | Cook Flag |
-|------|------|----------|----------|------------|-----------|
-| `--auto` | Auto-detect | Follows mode | Follows mode | Follows mode | Follows mode |
-| `--fast` | Fast | Skip | Skip | Skip | `--auto` |
-| `--hard` | Hard | 2 researchers | Yes | Optional | (none) |
-| `--parallel` | Parallel | 2 researchers | Yes | Optional | `--parallel` |
-| `--two` | Two approaches | 2+ researchers | After selection | After selection | (none) |
+| Flag         | Mode           | Research       | Red Team        | Validation      | Cook Flag    |
+| ------------ | -------------- | -------------- | --------------- | --------------- | ------------ |
+| `--auto`     | Auto-detect    | Follows mode   | Follows mode    | Follows mode    | Follows mode |
+| `--fast`     | Fast           | Skip           | Skip            | Skip            | `--auto`     |
+| `--hard`     | Hard           | 2 researchers  | Yes             | Optional        | (none)       |
+| `--parallel` | Parallel       | 2 researchers  | Yes             | Optional        | `--parallel` |
+| `--two`      | Two approaches | 2+ researchers | After selection | After selection | (none)       |
 
 Add `--no-tasks` to skip task hydration in any mode.
 
@@ -52,20 +52,25 @@ Always honoring **YAGNI**, **KISS**, and **DRY** principles.
 **Be honest, be brutal, straight to the point, and be concise.**
 
 ### 1. Research & Analysis
+
 Load: `references/research-phase.md`
 **Skip if:** Fast mode or provided with researcher reports
 
 ### 2. Codebase Understanding
+
 Load: `references/codebase-understanding.md`
 **Skip if:** Provided with scout reports
 
 ### 3. Solution Design
+
 Load: `references/solution-design.md`
 
 ### 4. Plan Creation & Organization
+
 Load: `references/plan-organization.md`
 
 ### 5. Task Breakdown & Output Standards
+
 Load: `references/output-standards.md`
 
 ## Workflow Process
@@ -98,6 +103,7 @@ Plan files = persistent. Tasks = session-scoped. Hydration bridges the gap.
 Load: `references/task-management.md` for hydration pattern, TaskCreate patterns, cook handoff protocol.
 
 ### Hydration Workflow
+
 1. Write plan.md + phase files (persistent layer)
 2. TaskCreate per phase with `addBlockedBy` chain
 3. TaskCreate for critical/high-risk steps within phases
@@ -107,6 +113,7 @@ Load: `references/task-management.md` for hydration pattern, TaskCreate patterns
 ## Active Plan State
 
 Check `## Plan Context` injected by hooks:
+
 - **"Plan: {path}"** → Active plan. Ask "Continue? [Y/n]"
 - **"Suggested: {path}"** → Branch hint only. Ask if activate or create new.
 - **"Plan: none"** → Create new using `Plan dir:` from `## Naming`
@@ -115,15 +122,16 @@ After creating plan: `node $HOME/.claude/scripts/set-active-plan.cjs {plan-dir}`
 Reports: Active plans → plan-specific path. Suggested → default path.
 
 ### Important
+
 DO NOT create plans or reports in USER directory.
 ALWAYS create plans or reports in CURRENT WORKING PROJECT DIRECTORY.
 
 ## Subcommands
 
-| Subcommand | Reference | Purpose |
-|------------|-----------|---------|
-| `/plan archive` | `references/archive-workflow.md` | Archive plans + write journal entries |
-| `/plan red-team` | `references/red-team-workflow.md` | Adversarial plan review with hostile reviewers |
+| Subcommand       | Reference                         | Purpose                                         |
+| ---------------- | --------------------------------- | ----------------------------------------------- |
+| `/plan archive`  | `references/archive-workflow.md`  | Archive plans + write journal entries           |
+| `/plan red-team` | `references/red-team-workflow.md` | Adversarial plan review with hostile reviewers  |
 | `/plan validate` | `references/validate-workflow.md` | Validate plan with critical questions interview |
 
 ## Quality Standards

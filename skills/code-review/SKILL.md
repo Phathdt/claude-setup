@@ -1,7 +1,7 @@
 ---
 name: code-review
-description: "Review code quality, receive feedback with technical rigor, verify completion claims. Use before PRs, after implementing features, when claiming task completion. Includes scout-based edge case detection and native Task pipeline orchestration."
-argument-hint: "[context] OR codebase [parallel]"
+description: 'Review code quality, receive feedback with technical rigor, verify completion claims. Use before PRs, after implementing features, when claiming task completion. Includes scout-based edge case detection and native Task pipeline orchestration.'
+argument-hint: '[context] OR codebase [parallel]'
 ---
 
 # Code Review
@@ -12,10 +12,10 @@ Guide proper code review practices emphasizing technical rigor, evidence-based c
 
 If invoked with context (recent changes/PR), proceed with review. If invoked WITHOUT arguments, use `AskUserQuestion` to present available review operations:
 
-| Operation | Description |
-|-----------|-------------|
-| `(default)` | Review recent changes/PR |
-| `codebase` | Full codebase scan & analysis |
+| Operation           | Description                   |
+| ------------------- | ----------------------------- |
+| `(default)`         | Review recent changes/PR      |
+| `codebase`          | Full codebase scan & analysis |
 | `codebase parallel` | Parallel multi-reviewer audit |
 
 Present as options via `AskUserQuestion` with header "Review Operation", question "What would you like to do?".
@@ -29,13 +29,13 @@ Verify before implementing. Ask before assuming. Evidence before claims.
 
 ## Practices
 
-| Practice | When | Reference |
-|----------|------|-----------|
-| Receiving feedback | Unclear feedback, external reviewers, needs prioritization | `references/code-review-reception.md` |
-| Requesting review | After tasks, before merge, stuck on problem | `references/requesting-code-review.md` |
-| Verification gates | Before any completion claim, commit, PR | `references/verification-before-completion.md` |
-| Edge case scouting | After implementation, before review | `references/edge-case-scouting.md` |
-| **Task-managed reviews** | Multi-file features (3+ files), parallel reviewers, fix cycles | `references/task-management-reviews.md` |
+| Practice                 | When                                                           | Reference                                      |
+| ------------------------ | -------------------------------------------------------------- | ---------------------------------------------- |
+| Receiving feedback       | Unclear feedback, external reviewers, needs prioritization     | `references/code-review-reception.md`          |
+| Requesting review        | After tasks, before merge, stuck on problem                    | `references/requesting-code-review.md`         |
+| Verification gates       | Before any completion claim, commit, PR                        | `references/verification-before-completion.md` |
+| Edge case scouting       | After implementation, before review                            | `references/edge-case-scouting.md`             |
+| **Task-managed reviews** | Multi-file features (3+ files), parallel reviewers, fix cycles | `references/task-management-reviews.md`        |
 
 ## Quick Decision Tree
 
@@ -53,12 +53,14 @@ SITUATION?
 **Pattern:** READ → UNDERSTAND → VERIFY → EVALUATE → RESPOND → IMPLEMENT
 
 **Rules:**
+
 - No performative agreement: "You're absolutely right!", "Great point!"
 - No implementation before verification
 - Restate, ask questions, push back with reasoning, or just work
 - YAGNI check: grep for usage before implementing "proper" features
 
 **Source handling:**
+
 - Human partner: Trusted - implement after understanding
 - External reviewers: Verify technically, check breakage, push back if wrong
 
@@ -69,6 +71,7 @@ SITUATION?
 **When:** After each task, major features, before merge
 
 **Process:**
+
 1. **Scout edge cases first** (see below)
 2. Get SHAs: `BASE_SHA=$(git rev-parse HEAD~1)` and `HEAD_SHA=$(git rev-parse HEAD)`
 3. Dispatch code-reviewer subagent with: WHAT, PLAN, BASE_SHA, HEAD_SHA, DESCRIPTION
@@ -81,6 +84,7 @@ SITUATION?
 **When:** After implementation, before requesting code-reviewer
 
 **Process:**
+
 1. Invoke `/scout` with edge-case-focused prompt
 2. Scout analyzes: affected files, data flows, error paths, boundary conditions
 3. Review scout findings for potential issues
@@ -114,6 +118,7 @@ TaskCreate: "Verify fixes pass"        → pending, blockedBy: [fix]
 **Gate:** IDENTIFY command → RUN full → READ output → VERIFY confirms → THEN claim
 
 **Requirements:**
+
 - Tests pass: Output shows 0 failures
 - Build succeeds: Exit 0
 - Bug fixed: Original symptom passes
@@ -132,9 +137,9 @@ TaskCreate: "Verify fixes pass"        → pending, blockedBy: [fix]
 
 ## Codebase Analysis Subcommands
 
-| Subcommand | Reference | Purpose |
-|------------|-----------|---------|
-| `/code-review codebase` | `references/codebase-scan-workflow.md` | Scan & analyze the codebase |
+| Subcommand                       | Reference                                | Purpose                                     |
+| -------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| `/code-review codebase`          | `references/codebase-scan-workflow.md`   | Scan & analyze the codebase                 |
 | `/code-review codebase parallel` | `references/parallel-review-workflow.md` | Ultrathink edge cases, then parallel verify |
 
 ## Bottom Line

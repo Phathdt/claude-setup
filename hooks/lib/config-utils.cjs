@@ -25,39 +25,39 @@ const DEFAULT_CONFIG = {
       // CHANGED: Removed 'mostRecent' - only explicit session state activates plans
       // Branch matching now returns 'suggested' not 'active'
       order: ['session', 'branch'],
-      branchPattern: '(?:feat|fix|chore|refactor|docs)/(?:[^/]+/)?(.+)'
+      branchPattern: '(?:feat|fix|chore|refactor|docs)/(?:[^/]+/)?(.+)',
     },
     validation: {
-      mode: 'prompt',  // 'auto' | 'prompt' | 'off'
+      mode: 'prompt', // 'auto' | 'prompt' | 'off'
       minQuestions: 3,
       maxQuestions: 8,
-      focusAreas: ['assumptions', 'risks', 'tradeoffs', 'architecture']
-    }
+      focusAreas: ['assumptions', 'risks', 'tradeoffs', 'architecture'],
+    },
   },
   paths: {
     docs: 'docs',
-    plans: 'plans'
+    plans: 'plans',
   },
   docs: {
-    maxLoc: 800  // Maximum lines of code per doc file before warning
+    maxLoc: 800, // Maximum lines of code per doc file before warning
   },
   locale: {
-    thinkingLanguage: null,  // Language for reasoning (e.g., "en" for precision)
-    responseLanguage: null   // Language for user-facing output (e.g., "vi")
+    thinkingLanguage: null, // Language for reasoning (e.g., "en" for precision)
+    responseLanguage: null, // Language for user-facing output (e.g., "vi")
   },
   trust: {
     passphrase: null,
-    enabled: false
+    enabled: false,
   },
   project: {
     type: 'auto',
     packageManager: 'auto',
-    framework: 'auto'
+    framework: 'auto',
   },
   skills: {
     research: {
-      useGemini: true  // Toggle Gemini CLI usage in research skill
-    }
+      useGemini: true, // Toggle Gemini CLI usage in research skill
+    },
   },
   assertions: [],
   statusline: 'full',
@@ -71,8 +71,8 @@ const DEFAULT_CONFIG = {
     'privacy-block': true,
     'post-edit-simplify-reminder': true,
     'task-completed-handler': true,
-    'teammate-idle-handler': true
-  }
+    'teammate-idle-handler': true,
+  },
 };
 
 /**
@@ -172,7 +172,11 @@ function writeSessionState(sessionId, state) {
     fs.renameSync(tmpFile, tempPath);
     return true;
   } catch (e) {
-    try { fs.unlinkSync(tmpFile); } catch (_) { /* ignore */ }
+    try {
+      fs.unlinkSync(tmpFile);
+    } catch (_) {
+      /* ignore */
+    }
     return false;
   }
 }
@@ -239,8 +243,8 @@ function findMostRecentPlan(plansDir) {
     if (!fs.existsSync(plansDir)) return null;
     const entries = fs.readdirSync(plansDir, { withFileTypes: true });
     const planDirs = entries
-      .filter(e => e.isDirectory() && /^\d{6}/.test(e.name))
-      .map(e => e.name)
+      .filter((e) => e.isDirectory() && /^\d{6}/.test(e.name))
+      .map((e) => e.name)
       .sort()
       .reverse();
     return planDirs.length > 0 ? path.join(plansDir, planDirs[0]) : null;
@@ -269,7 +273,7 @@ function execSafe(cmd, options = {}) {
   const allowedCommands = [
     'git branch --show-current',
     'git rev-parse --abbrev-ref HEAD',
-    'git rev-parse --show-toplevel'
+    'git rev-parse --show-toplevel',
   ];
   if (!allowedCommands.includes(cmd)) {
     return null;
@@ -283,7 +287,7 @@ function execSafe(cmd, options = {}) {
         encoding: 'utf8',
         timeout,
         cwd,
-        stdio: ['pipe', 'pipe', 'pipe']
+        stdio: ['pipe', 'pipe', 'pipe'],
       })
       .trim();
   } catch (e) {
@@ -331,12 +335,13 @@ function resolvePlanPath(sessionId, config) {
           const branch = execSafe('git branch --show-current');
           const slug = extractSlugFromBranch(branch, branchPattern);
           if (slug && fs.existsSync(plansDir)) {
-            const entries = fs.readdirSync(plansDir, { withFileTypes: true })
-              .filter(e => e.isDirectory() && e.name.includes(slug));
+            const entries = fs
+              .readdirSync(plansDir, { withFileTypes: true })
+              .filter((e) => e.isDirectory() && e.name.includes(slug));
             if (entries.length > 0) {
               return {
                 path: path.join(plansDir, entries[entries.length - 1].name),
-                resolvedBy: 'branch'
+                resolvedBy: 'branch',
               };
             }
           }
@@ -436,12 +441,12 @@ function sanitizeConfig(config, projectRoot) {
     // Merge resolution defaults
     result.plan.resolution = {
       ...DEFAULT_CONFIG.plan.resolution,
-      ...result.plan.resolution
+      ...result.plan.resolution,
     };
     // Merge validation defaults
     result.plan.validation = {
       ...DEFAULT_CONFIG.plan.validation,
-      ...result.plan.validation
+      ...result.plan.validation,
     };
   }
 
@@ -498,7 +503,7 @@ function loadConfig(options = {}) {
     const result = {
       plan: merged.plan || DEFAULT_CONFIG.plan,
       paths: merged.paths || DEFAULT_CONFIG.paths,
-      docs: merged.docs || DEFAULT_CONFIG.docs
+      docs: merged.docs || DEFAULT_CONFIG.docs,
     };
 
     if (includeLocale) {
@@ -537,10 +542,10 @@ function getDefaultConfig(includeProject = true, includeAssertions = true, inclu
     plan: { ...DEFAULT_CONFIG.plan },
     paths: { ...DEFAULT_CONFIG.paths },
     docs: { ...DEFAULT_CONFIG.docs },
-    codingLevel: -1,  // Default: disabled (no injection, saves tokens)
+    codingLevel: -1, // Default: disabled (no injection, saves tokens)
     skills: { ...DEFAULT_CONFIG.skills },
     hooks: { ...DEFAULT_CONFIG.hooks },
-    statusline: 'full'
+    statusline: 'full',
   };
   if (includeLocale) {
     result.locale = { ...DEFAULT_CONFIG.locale };
@@ -561,10 +566,10 @@ function getDefaultConfig(includeProject = true, includeAssertions = true, inclu
 function escapeShellValue(str) {
   if (typeof str !== 'string') return str;
   return str
-    .replace(/\\/g, '\\\\')   // Backslash first
-    .replace(/"/g, '\\"')     // Double quotes
-    .replace(/\$/g, '\\$')    // Dollar sign
-    .replace(/`/g, '\\`');    // Backticks (command substitution)
+    .replace(/\\/g, '\\\\') // Backslash first
+    .replace(/"/g, '\\"') // Double quotes
+    .replace(/\$/g, '\\$') // Dollar sign
+    .replace(/`/g, '\\`'); // Backticks (command substitution)
 }
 
 /**
@@ -624,11 +629,7 @@ function formatIssueId(issueId, planConfig) {
  */
 function extractIssueFromBranch(branch) {
   if (!branch) return null;
-  const patterns = [
-    /(?:issue|gh|fix|feat|bug)[/-]?(\d+)/i,
-    /[/-](\d+)[/-]/,
-    /#(\d+)/
-  ];
+  const patterns = [/(?:issue|gh|fix|feat|bug)[/-]?(\d+)/i, /[/-](\d+)[/-]/, /#(\d+)/];
   for (const pattern of patterns) {
     const match = branch.match(pattern);
     if (match) return match[1];
@@ -647,13 +648,13 @@ function formatDate(format) {
   const pad = (n, len = 2) => String(n).padStart(len, '0');
 
   const tokens = {
-    'YYYY': now.getFullYear(),
-    'YY': String(now.getFullYear()).slice(-2),
-    'MM': pad(now.getMonth() + 1),
-    'DD': pad(now.getDate()),
-    'HH': pad(now.getHours()),
-    'mm': pad(now.getMinutes()),
-    'ss': pad(now.getSeconds())
+    YYYY: now.getFullYear(),
+    YY: String(now.getFullYear()).slice(-2),
+    MM: pad(now.getMonth() + 1),
+    DD: pad(now.getDate()),
+    HH: pad(now.getHours()),
+    mm: pad(now.getMinutes()),
+    ss: pad(now.getSeconds()),
   };
 
   let result = format;
@@ -676,7 +677,10 @@ function validateNamingPattern(pattern) {
   }
 
   // After removing {slug} placeholder, should still have content
-  const withoutSlug = pattern.replace(/\{slug\}/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const withoutSlug = pattern
+    .replace(/\{slug\}/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
   if (!withoutSlug) {
     return { valid: false, error: 'Pattern resolves to empty after removing {slug}' };
   }
@@ -730,11 +734,11 @@ function resolveNamingPattern(planConfig, gitBranch) {
   // - Remove leading/trailing hyphens
   // - Collapse multiple hyphens (except around {slug})
   pattern = pattern
-    .replace(/^-+/, '')           // Remove leading hyphens
-    .replace(/-+$/, '')           // Remove trailing hyphens
-    .replace(/-+(\{slug\})/g, '-$1')  // Single hyphen before {slug}
-    .replace(/(\{slug\})-+/g, '$1-')  // Single hyphen after {slug}
-    .replace(/--+/g, '-');        // Collapse other multiple hyphens
+    .replace(/^-+/, '') // Remove leading hyphens
+    .replace(/-+$/, '') // Remove trailing hyphens
+    .replace(/-+(\{slug\})/g, '-$1') // Single hyphen before {slug}
+    .replace(/(\{slug\})-+/g, '$1-') // Single hyphen after {slug}
+    .replace(/--+/g, '-'); // Collapse other multiple hyphens
 
   // Validate the resulting pattern
   const validation = validateNamingPattern(pattern);
@@ -790,7 +794,11 @@ function extractTaskListId(resolved) {
  * @returns {boolean} Whether hook is enabled
  */
 function isHookEnabled(hookName) {
-  const config = loadConfig({ includeProject: false, includeAssertions: false, includeLocale: false });
+  const config = loadConfig({
+    includeProject: false,
+    includeAssertions: false,
+    includeLocale: false,
+  });
   const hooks = config.hooks || {};
   // Return true if undefined (default enabled), otherwise return the boolean value
   return hooks[hookName] !== false;
@@ -827,5 +835,5 @@ module.exports = {
   getGitBranch,
   getGitRoot,
   extractTaskListId,
-  isHookEnabled
+  isHookEnabled,
 };

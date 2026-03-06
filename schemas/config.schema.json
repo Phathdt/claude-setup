@@ -67,16 +67,9 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": [
-                  "session",
-                  "branch",
-                  "directory"
-                ]
+                "enum": ["session", "branch", "directory"]
               },
-              "default": [
-                "session",
-                "branch"
-              ],
+              "default": ["session", "branch"],
               "description": "Order of resolution strategies for plan context"
             },
             "branchPattern": {
@@ -93,12 +86,7 @@
           "properties": {
             "mode": {
               "type": "string",
-              "enum": [
-                "prompt",
-                "auto",
-                "strict",
-                "none"
-              ],
+              "enum": ["prompt", "auto", "strict", "none"],
               "default": "prompt",
               "description": "Validation mode: prompt=ask questions, auto=auto-validate, strict=require all, none=skip"
             },
@@ -131,12 +119,7 @@
                   "dependencies"
                 ]
               },
-              "default": [
-                "assumptions",
-                "risks",
-                "tradeoffs",
-                "architecture"
-              ],
+              "default": ["assumptions", "risks", "tradeoffs", "architecture"],
               "description": "Focus areas for validation questions"
             }
           },
@@ -167,18 +150,12 @@
       "description": "Language and locale settings",
       "properties": {
         "thinkingLanguage": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "default": null,
           "description": "Language for Claude's thinking (null=English)"
         },
         "responseLanguage": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "default": null,
           "description": "Language for Claude's responses (null=match user)"
         }
@@ -190,10 +167,7 @@
       "description": "Trust mode settings for auto-approval",
       "properties": {
         "passphrase": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "default": null,
           "description": "Passphrase to enable trust mode (null=disabled)"
         },
@@ -211,28 +185,13 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": [
-            "auto",
-            "library",
-            "application",
-            "monorepo",
-            "cli",
-            "api",
-            "web",
-            "mobile"
-          ],
+          "enum": ["auto", "library", "application", "monorepo", "cli", "api", "web", "mobile"],
           "default": "auto",
           "description": "Project type (auto=detect from package.json)"
         },
         "packageManager": {
           "type": "string",
-          "enum": [
-            "auto",
-            "npm",
-            "yarn",
-            "pnpm",
-            "bun"
-          ],
+          "enum": ["auto", "npm", "yarn", "pnpm", "bun"],
           "default": "auto",
           "description": "Package manager (auto=detect from lockfile)"
         },

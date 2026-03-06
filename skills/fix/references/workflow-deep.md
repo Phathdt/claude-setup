@@ -20,19 +20,23 @@ T8 = TaskCreate(subject="Finalize & docs",            activeForm="Finalizing",  
 ## Steps
 
 ### Step 1: Debug & Parallel Investigation
+
 `TaskUpdate(T1, status="in_progress")`
 Activate `debug` skill. Launch 2-3 `Explore` subagents in parallel:
+
 ```
 Task("Explore", "Find error origin", "Trace error")
 Task("Explore", "Find affected components", "Map deps")
 Task("Explore", "Find similar patterns", "Find patterns")
 ```
+
 See `references/parallel-exploration.md` for patterns.
 
 `TaskUpdate(T1, status="completed")`
 **Output:** `✓ Step 1: Root cause - [summary], system impact: [scope]`
 
 ### Step 2: Research (parallel with Step 1)
+
 `TaskUpdate(T2, status="in_progress")`
 Use `researcher` subagent for external knowledge.
 
@@ -44,6 +48,7 @@ Use `researcher` subagent for external knowledge.
 **Output:** `✓ Step 2: Research complete - [key findings]`
 
 ### Step 3: Brainstorm
+
 `TaskUpdate(T3, status="in_progress")` — auto-unblocks when T1 + T2 complete.
 Activate `brainstorm` skill.
 
@@ -55,6 +60,7 @@ Activate `brainstorm` skill.
 **Output:** `✓ Step 3: Approach selected - [chosen approach]`
 
 ### Step 4: Plan
+
 `TaskUpdate(T4, status="in_progress")`
 Use `planner` subagent to create implementation plan.
 
@@ -66,6 +72,7 @@ Use `planner` subagent to create implementation plan.
 **Output:** `✓ Step 4: Plan created - [N] phases`
 
 ### Step 5: Implement
+
 `TaskUpdate(T5, status="in_progress")`
 Implement per plan. Use `context-engineering`, `sequential-thinking`, `problem-solving`.
 
@@ -76,6 +83,7 @@ See `references/parallel-exploration.md`
 **Output:** `✓ Step 5: Implemented - [N] files, [M] phases, verified`
 
 ### Step 6: Test
+
 `TaskUpdate(T6, status="in_progress")`
 Use `tester` subagent.
 
@@ -87,6 +95,7 @@ Use `tester` subagent.
 **Output:** `✓ Step 6: Tests [X/X passed]`
 
 ### Step 7: Review
+
 `TaskUpdate(T7, status="in_progress")`
 Use `code-reviewer` subagent.
 
@@ -96,7 +105,9 @@ See `references/review-cycle.md` for mode-specific handling.
 **Output:** `✓ Step 7: Review [score]/10 - [status]`
 
 ### Step 8: Finalize
+
 `TaskUpdate(T8, status="in_progress")`
+
 - Use `project-manager` subagent to update roadmap
 - Use `docs-manager` subagent for documentation
 - Use `git-manager` subagent for commit
@@ -106,16 +117,16 @@ See `references/review-cycle.md` for mode-specific handling.
 
 ## Skills/Subagents Activated
 
-| Step | Skills/Subagents |
-|------|------------------|
-| 1 | `debug`, parallel `Explore` subagents for investigation |
-| 2 | `researcher` (runs parallel with step 1) |
-| 3 | `brainstorm` |
-| 4 | `planner` |
-| 5 | `problem-solving`, `sequential-thinking`, `context-engineering`, parallel `Bash` |
-| 6 | `tester` |
-| 7 | `code-reviewer` |
-| 8 | `project-manager`, `docs-manager`, `Bash` |
+| Step | Skills/Subagents                                                                 |
+| ---- | -------------------------------------------------------------------------------- |
+| 1    | `debug`, parallel `Explore` subagents for investigation                          |
+| 2    | `researcher` (runs parallel with step 1)                                         |
+| 3    | `brainstorm`                                                                     |
+| 4    | `planner`                                                                        |
+| 5    | `problem-solving`, `sequential-thinking`, `context-engineering`, parallel `Bash` |
+| 6    | `tester`                                                                         |
+| 7    | `code-reviewer`                                                                  |
+| 8    | `project-manager`, `docs-manager`, `Bash`                                        |
 
 **Rules:** Don't skip steps. Validate before proceeding. One phase at a time.
 **Frontend:** Use `chrome`, `chrome-devtools` or any relevant skills/tools to verify.

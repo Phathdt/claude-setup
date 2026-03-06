@@ -16,10 +16,7 @@ try {
   const fs = require('fs');
 
   // Import shared context building logic
-  const {
-    buildReminderContext,
-    wasRecentlyInjected
-  } = require('./lib/context-builder.cjs');
+  const { buildReminderContext, wasRecentlyInjected } = require('./lib/context-builder.cjs');
   const { isHookEnabled } = require('./lib/config-utils.cjs');
 
   // Early exit if hook disabled in config
@@ -27,34 +24,34 @@ try {
     process.exit(0);
   }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN EXECUTION
-// ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MAIN EXECUTION
+  // ═══════════════════════════════════════════════════════════════════════════
 
-async function main() {
-  try {
-    const stdin = fs.readFileSync(0, 'utf-8').trim();
-    if (!stdin) process.exit(0);
+  async function main() {
+    try {
+      const stdin = fs.readFileSync(0, 'utf-8').trim();
+      if (!stdin) process.exit(0);
 
-    const payload = JSON.parse(stdin);
-    if (wasRecentlyInjected(payload.transcript_path)) process.exit(0);
+      const payload = JSON.parse(stdin);
+      if (wasRecentlyInjected(payload.transcript_path)) process.exit(0);
 
-    // Get session ID from hook input or env var
-    const sessionId = payload.session_id || process.env.CK_SESSION_ID || null;
+      // Get session ID from hook input or env var
+      const sessionId = payload.session_id || process.env.CK_SESSION_ID || null;
 
-    // Issue #327: Use CWD as base for subdirectory workflow support
-    // The baseDir is passed to buildReminderContext for absolute path resolution
-    const baseDir = process.cwd();
+      // Issue #327: Use CWD as base for subdirectory workflow support
+      // The baseDir is passed to buildReminderContext for absolute path resolution
+      const baseDir = process.cwd();
 
-    // Use shared context builder with baseDir for absolute paths
-    const { content } = buildReminderContext({ sessionId, baseDir });
+      // Use shared context builder with baseDir for absolute paths
+      const { content } = buildReminderContext({ sessionId, baseDir });
 
-    console.log(content);
-    process.exit(0);
-  } catch (error) {
-    console.error(`Dev rules hook error: ${error.message}`);
-    process.exit(0);
-  }
+      console.log(content);
+      process.exit(0);
+    } catch (error) {
+      console.error(`Dev rules hook error: ${error.message}`);
+      process.exit(0);
+    }
   }
 
   main();
@@ -65,8 +62,15 @@ async function main() {
     const p = require('path');
     const logDir = p.join(__dirname, '.logs');
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-    fs.appendFileSync(p.join(logDir, 'hook-log.jsonl'),
-      JSON.stringify({ ts: new Date().toISOString(), hook: p.basename(__filename, '.cjs'), status: 'crash', error: e.message }) + '\n');
+    fs.appendFileSync(
+      p.join(logDir, 'hook-log.jsonl'),
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        hook: p.basename(__filename, '.cjs'),
+        status: 'crash',
+        error: e.message,
+      }) + '\n'
+    );
   } catch (_) {}
   process.exit(0); // fail-open
 }
