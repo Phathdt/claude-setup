@@ -2,16 +2,8 @@
 # Custom Claude Code statusline for Bash
 # Cross-platform support: macOS, Linux
 # Theme: detailed | Features: directory, git, model, usage, session, tokens
-#
-# Context Window Calculation:
-# - 100% = compaction threshold (not model limit)
-# - Self-calibrates via PreCompact hook
-# - Falls back to smart defaults based on window size
 
 input=$(cat)
-
-# Calibration file path (now in /tmp/kit/ namespace - fixes #178)
-CALIBRATION_PATH="${TMPDIR:-/tmp}/kit/calibration.json"
 
 # ---- time helpers ----
 to_epoch() {
@@ -30,47 +22,6 @@ fmt_time_hm() {
   if date -r 0 +%s >/dev/null 2>&1; then date -r "$epoch" +"%H:%M"; else date -d "@$epoch" +"%H:%M"; fi
 }
 
-# ---- compact threshold calculation ----
-# Get smart default compact threshold based on context window size
-# Research-based defaults:
-# - 200k window: ~80% (160k) - confirmed from GitHub issues
-# - 500k window: ~60% (300k) - estimated
-# - 1M window: ~33% (330k) - derived from user observations
-get_default_compact_threshold() {
-  local context_size="$1"
-
-  # Known thresholds (autocompact buffer = 22.5% for 200k)
-  case "$context_size" in
-    200000) echo 155000; return ;;  # 77.5% - confirmed via /context
-    1000000) echo 330000; return ;; # 33% - 1M beta window
-  esac
-
-  # Tiered defaults based on window size
-  if [ "$context_size" -ge 1000000 ] 2>/dev/null; then
-    echo $((context_size * 33 / 100))
-  else
-    # Default: ~77.5% for standard windows (200k confirmed)
-    echo $((context_size * 775 / 1000))
-  fi
-}
-
-# Read calibrated threshold from file if available
-get_compact_threshold() {
-  local context_size="$1"
-
-  # Try to read calibration file
-  if [ -f "$CALIBRATION_PATH" ] && command -v jq >/dev/null 2>&1; then
-    local calibrated
-    calibrated=$(jq -r --arg key "$context_size" '.[$key].threshold // empty' "$CALIBRATION_PATH" 2>/dev/null)
-    if [ -n "$calibrated" ] && [ "$calibrated" -gt 0 ] 2>/dev/null; then
-      echo "$calibrated"
-      return
-    fi
-  fi
-
-  # Fall back to smart defaults
-  get_default_compact_threshold "$context_size"
-}
 
 # ---- progress bar ----
 progress_bar() {
@@ -94,6 +45,28 @@ get_severity_emoji() {
   fi
 }
 
+# ---- shorten path (fish-style: ~/D/D/x/project) ----
+shorten_path() {
+  local p="$1" prefix=""
+  # Handle bare ~ or single-segment paths
+  if [ "$p" = "~" ] || [ "$p" = "/" ]; then echo "$p"; return; fi
+  # Preserve ~ prefix
+  if [[ "$p" == "~/"* ]]; then prefix="~"; p="${p#\~}"; fi
+  # Split into parts, abbreviate all except last to first char
+  IFS='/' read -ra parts <<< "$p"
+  local last=${#parts[@]} result=""
+  for ((i=0; i<last; i++)); do
+    local seg="${parts[$i]}"
+    [ -z "$seg" ] && continue
+    if ((i < last - 1)); then
+      result+="/${seg:0:1}"
+    else
+      result+="/${seg}"
+    fi
+  done
+  echo "${prefix}${result}"
+}
+
 # git utilities
 num_or_zero() { v="$1"; [[ "$v" =~ ^[0-9]+$ ]] && echo "$v" || echo 0; }
 
@@ -106,12 +79,14 @@ fi
 # ---- basics ----
 if command -v jq >/dev/null 2>&1; then
   current_dir=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // "unknown"' 2>/dev/null | sed "s|^$HOME|~|g")
+  current_dir=$(shorten_path "$current_dir")
   model_name=$(echo "$input" | jq -r '.model.display_name // "Claude"' 2>/dev/null)
   model_version=$(echo "$input" | jq -r '.model.version // ""' 2>/dev/null)
 else
   # Fallback: Extract basic info without jq using grep/sed
   current_dir=$(echo "$input" | grep -o '"current_dir"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*:.*"\([^"]*\)".*/\1/' | sed "s|^$HOME|~|g")
   [ -z "$current_dir" ] && current_dir=$(pwd | sed "s|^$HOME|~|g")
+  current_dir=$(shorten_path "$current_dir")
   model_name=$(echo "$input" | grep -o '"display_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*:.*"\([^"]*\)".*/\1/')
   [ -z "$model_name" ] && model_name="Claude"
   model_version=""
@@ -136,23 +111,10 @@ cost_usd=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
 lines_added=$(echo "$input" | jq -r '.cost.total_lines_added // 0' 2>/dev/null)
 lines_removed=$(echo "$input" | jq -r '.cost.total_lines_removed // 0' 2>/dev/null)
 
-# Extract context window usage (Claude Code v2.0.65+)
-# Calculate percentage against COMPACT THRESHOLD, not model limit
-# 100% = compaction imminent
-context_input=$(echo "$input" | jq -r '.context_window.total_input_tokens // 0' 2>/dev/null)
-context_output=$(echo "$input" | jq -r '.context_window.total_output_tokens // 0' 2>/dev/null)
-context_size=$(echo "$input" | jq -r '.context_window.context_window_size // 0' 2>/dev/null)
+# Extract context window usage percentage (Claude Code native)
+context_pct=$(echo "$input" | jq -r '.context_window.used_percentage // 0' 2>/dev/null)
 
-if [ -n "$context_size" ] && [ "$context_size" -gt 0 ] 2>/dev/null; then
-  context_total=$((context_input + context_output))
-  compact_threshold=$(get_compact_threshold "$context_size")
-
-  # Calculate percentage against compact threshold
-  context_pct=$((context_total * 100 / compact_threshold))
-  # Clamp to 100% max to handle edge cases
-  ((context_pct > 100)) && context_pct=100
-
-  # Get severity emoji and progress bar
+if [ -n "$context_pct" ] && [ "$context_pct" -ge 0 ] 2>/dev/null; then
   severity_emoji=$(get_severity_emoji "$context_pct")
   bar=$(progress_bar "$context_pct" 12)
   context_txt="${severity_emoji} ${bar} ${context_pct}%"
