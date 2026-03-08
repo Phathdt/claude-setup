@@ -174,7 +174,7 @@ During the implementation process, you will delegate tasks to the following suba
 - Use `nestjs-expert` agent to implement backend/NestJS tasks.
 - Use `brainstormer` agent to evaluate architectural decisions before implementation.
 - Use `tester` agent to run tests and analyze the summary report.
-- Use `debugger` agent to collect logs in server or github actions to analyze the summary report.
+- Use `debugger` agent to collect logs in server or GitHub Actions/GitLab CI to analyze the summary report.
 - Use `code-reviewer` agent to review code.
 - Use `docs-manager` agent to update docs in `./docs` directory if any.
 - Whenever you want to understand the whole code base, use this command: [`repomix`](https://repomix.com/guide/usage) and read the output summary file.
@@ -189,7 +189,7 @@ During the implementation process, you will delegate tasks to the following suba
 ### Pre-commit/Push Rules
 
 - Run linting before commit
-- Run tests before push (DO NOT ignore failed tests just to pass the build or github actions)
+- Run tests before push (DO NOT ignore failed tests just to pass the build or CI)
 - Keep commits focused on the actual code changes
 - **DO NOT** commit and push any confidential information (such as dotenv files, API keys, database credentials, etc.) to git repository!
 - **DO NOT** commit session files (`.claude_sessions/`) to git repository - add to `.gitignore`
