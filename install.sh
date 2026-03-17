@@ -60,7 +60,7 @@ if [ -d "$TARGET" ]; then
     info "Backing up to $BACKUP_DIR ..."
     mkdir -p "$BACKUP_DIR"
     # Back up key files only (not caches/runtime)
-    for item in CLAUDE.md settings.json .kit.json .kitignore agents commands hooks rules output-styles scripts schemas skills statusline.cjs statusline.sh statusline.ps1; do
+    for item in CLAUDE.md settings.json .kit.json .kitignore .env.example agents commands hooks rules output-styles scripts schemas skills statusline.cjs statusline.sh statusline.ps1; do
       if [ -e "$TARGET/$item" ]; then
         cp -r "$TARGET/$item" "$BACKUP_DIR/" 2>/dev/null || true
       fi
@@ -90,7 +90,7 @@ done
 mkdir -p "$TARGET/plans/reports"
 
 # Top-level files
-for file in CLAUDE.md settings.json .kit.json .kitignore .env.example .mcp.json.example .gitignore package.json .prettierrc.json .prettierignore statusline.sh; do
+for file in CLAUDE.md settings.json .kit.json .kitignore .env.example .gitignore package.json .prettierrc.json .prettierignore statusline.sh; do
   if [ -f "$SCRIPT_DIR/$file" ]; then
     cp "$SCRIPT_DIR/$file" "$TARGET/$file"
   fi
@@ -154,16 +154,42 @@ else
 fi
 
 # -------------------------------------------
-# Optional: Set up MCP servers
+# Optional: Set up global MCP servers
 # -------------------------------------------
-if [ ! -f "$TARGET/.mcp.json" ]; then
-  read -p "Set up MCP servers config? (context7, chrome-devtools, etc.) [y/N] " -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cp "$TARGET/.mcp.json.example" "$TARGET/.mcp.json"
-    info "Created ~/.claude/.mcp.json from template. Edit with your keys:"
-    echo "  nano ~/.claude/.mcp.json"
+if command -v claude &>/dev/null; then
+  # Check if any MCP servers already exist
+  EXISTING_MCP=$(claude mcp list 2>/dev/null | grep -c "." || true)
+  if [ "$EXISTING_MCP" -lt 2 ]; then
+    read -p "Set up global MCP servers? (context7, sequential-thinking, etc.) [y/N] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      info "Adding MCP servers (scope: user)..."
+
+      # context7 — library/framework docs lookup
+      claude mcp add -s user context7 -- npx -y @upstash/context7-mcp@latest 2>/dev/null && \
+        ok "Added: context7" || warn "Failed to add context7"
+
+      # sequential-thinking — step-by-step reasoning
+      claude mcp add -s user sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking 2>/dev/null && \
+        ok "Added: sequential-thinking" || warn "Failed to add sequential-thinking"
+
+      # chrome-devtools — browser debugging
+      claude mcp add -s user chrome-devtools -- npx -y chrome-devtools-mcp@latest 2>/dev/null && \
+        ok "Added: chrome-devtools" || warn "Failed to add chrome-devtools"
+
+      # atlassian — Jira/Confluence
+      claude mcp add -s user -t http atlassian https://mcp.atlassian.com/v1/mcp 2>/dev/null && \
+        ok "Added: atlassian" || warn "Failed to add atlassian"
+
+      ok "MCP servers configured globally."
+      info "Verify with: claude mcp list"
+    fi
+  else
+    info "Global MCP servers already configured ($EXISTING_MCP found). Skipping."
   fi
+else
+  warn "Claude CLI not found. Install it first to configure MCP servers."
+  info "After installing Claude CLI, run this script again to configure MCP servers."
 fi
 
 # -------------------------------------------
@@ -187,7 +213,7 @@ echo "  - Statusline (bash/zsh)"
 echo ""
 echo "Next steps:"
 echo "  1. Edit ~/.claude/.env with your API keys (optional)"
-echo "  2. Edit ~/.claude/.mcp.json for MCP servers (optional)"
+echo "  2. Verify MCP servers: claude mcp list"
 echo "  3. Start Claude Code in any project directory"
 echo ""
 echo "Quick test:"
