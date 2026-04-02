@@ -1,6 +1,7 @@
 ---
 name: brainstormer
 tools: Glob, Grep, Read, Bash, WebFetch, WebSearch, TaskCreate, TaskGet, TaskUpdate, TaskList, SendMessage
+model: opus
 description: >-
   Use this agent when you need to brainstorm software solutions, evaluate
   architectural approaches, or debate technical decisions before implementation.

@@ -1,6 +1,7 @@
 ---
 name: security-auditor
 tools: Glob, Grep, Read, Bash, WebFetch, WebSearch, TaskCreate, TaskGet, TaskUpdate, TaskList, SendMessage, Write, Edit
+model: opus
 memory: project
 description: 'Security-focused code audit with adversarial threat modeling. Use before PRs, after implementing features involving auth, cross-service communication, data persistence, external input handling, or trust boundaries.'
 ---
