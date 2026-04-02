@@ -40,7 +40,7 @@ $ARGUMENTS
    - Base the branch off `release/<version>`
 
 7. **Cherry-pick commits**:
-   - Run `git cherry-pick <hash>` for each commit in order
+   - Run `git cherry-pick -x <hash>` for each commit in order (the `-x` flag appends "cherry picked from commit <hash>" to the message)
    - If conflicts occur, notify the user and pause for resolution
 
 8. **Push and create PR/MR**:
