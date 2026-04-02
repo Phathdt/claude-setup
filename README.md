@@ -6,11 +6,11 @@ A pre-configured Claude Code setup for Node.js + React teams. Includes agents, s
 
 | Component         | Count | Description                                                       |
 | ----------------- | ----- | ----------------------------------------------------------------- |
-| **Agents**        | 8     | Specialized subagents (planner, debugger, tester, reviewer, etc.) |
-| **Commands**      | 7     | Slash commands (`/cmp`, `/ship`, `/fix-ci`, `/fix-pr`, etc.)      |
+| **Agents**        | 9     | Specialized subagents (planner, debugger, tester, reviewer, security-auditor, etc.) |
+| **Commands**      | 8     | Slash commands (`/cmp`, `/ship`, `/ship-release`, `/fix-ci`, `/fix-pr`, etc.)       |
 | **Hooks**         | 12    | Session management, privacy blocking, quality reminders           |
 | **Rules**         | 5     | Development standards, workflows, orchestration protocols         |
-| **Skills**        | 23    | React, Node.js, testing, git, databases, design, and more         |
+| **Skills**        | 25    | React, Node.js, testing, git, databases, design, PR review, and more               |
 | **Output Styles** | 6     | Coding level presets (ELI5 to Expert)                             |
 | **Statusline**    | 1     | Real-time session info (bash/zsh)                                 |
 
@@ -43,7 +43,7 @@ The installer will:
 
 ### Dev Workflow
 
-`code-review` · `cook` · `debug` · `fix` · `test` · `git` · `plan` · `docs`
+`code-review` · `review-pr` · `cook` · `debug` · `fix` · `test` · `git` · `plan` · `docs`
 
 ### Frontend (React + Node.js)
 
@@ -61,13 +61,15 @@ The installer will:
 
 | Command     | Description                             |
 | ----------- | --------------------------------------- |
-| `/cmp`      | Stage, commit, and push current branch  |
-| `/commit`   | Generate conventional commit message    |
-| `/ship`     | Create branch + PR/MR (GitHub & GitLab) |
-| `/fix-ci`   | Analyze and fix CI/CD failures          |
-| `/fix-pr`   | Fix PR/MR review comments               |
-| `/fix-test` | Run tests and fix failures              |
-| `/sync`     | Sync branch with remote                 |
+| `/cmp`           | Stage, commit, and push current branch           |
+| `/commit`        | Generate conventional commit message             |
+| `/ship`          | Create branch + PR/MR (GitHub & GitLab)          |
+| `/ship-release`  | Cherry-pick commits and ship to release branch   |
+| `/review-pr`     | Review PR/MR by URL with parallel agents         |
+| `/fix-ci`        | Analyze and fix CI/CD failures                   |
+| `/fix-pr`        | Fix PR/MR review comments                        |
+| `/fix-test`      | Run tests and fix failures                       |
+| `/sync`          | Sync branch with remote                          |
 
 ## Hooks
 
@@ -115,8 +117,8 @@ Copy `.mcp.json.example` to `.mcp.json` and configure:
 ├── .kit.json              # Kit configuration
 ├── .kitignore             # Directories to block from LLM context
 ├── statusline.sh          # Bash/zsh statusline
-├── agents/                # 8 agent definitions
-├── commands/              # 7 slash commands
+├── agents/                # 9 agent definitions
+├── commands/              # 8 slash commands
 ├── hooks/                 # 12 hooks + lib/
 │   ├── lib/               # Shared hook utilities
 │   └── scout-block/       # Directory blocking modules
@@ -124,7 +126,7 @@ Copy `.mcp.json.example` to `.mcp.json` and configure:
 ├── output-styles/         # 6 coding level presets
 ├── schemas/               # JSON schema for .kit.json
 ├── scripts/               # Utility scripts
-└── skills/                # 23 skill directories
+└── skills/                # 25 skill directories
 ```
 
 ## Customization
