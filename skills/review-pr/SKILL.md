@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: 'Review a GitHub PR or GitLab MR by URL. Fetches diff, performs code review, categorizes issues (high/medium/low), and posts summary comment back to the PR/MR. Usage: /review-pr <url>'
+description: 'Review a GitHub PR or GitLab MR by URL. Fetches diff, performs code review, categorizes issues (high/medium/low), prints report for discussion, then posts confirmed issues to PR/MR. Usage: /review-pr <url>'
 argument-hint: '<github-pr-url | gitlab-mr-url>'
 version: 1.0.0
 ---
@@ -226,22 +226,43 @@ LOW issues get one-line description.
 | **Total** | **{total}** | |
 ```
 
-### Step 6: Post Review Comment
+### Step 6: Print Report & Discuss
+
+**IMPORTANT: NEVER post comments directly to GitHub/GitLab without user confirmation.**
+
+Display the full review summary in the terminal. Then ask the user:
+
+```
+Review complete. What would you like to do?
+1. Post all findings as a review comment
+2. Select specific issues to post (by ID, e.g. H1, M2, L3)
+3. Edit/remove issues before posting
+4. Skip posting — just keep the local report
+```
+
+Wait for user response. The user may:
+- Disagree with some findings → remove them
+- Want to rephrase an issue → edit the description
+- Add context or adjust severity
+- Confirm all or a subset to post
+
+### Step 7: Post Review Comment (After User Confirmation)
+
+Only proceed after user explicitly confirms which issues to post.
 
 #### Verdict Logic
 
-- **No HIGH or MEDIUM issues** → `APPROVE`
+- **No HIGH or MEDIUM issues in confirmed set** → `APPROVE`
 - **MEDIUM issues only** → `COMMENT` (with suggestions)
 - **Any HIGH issue** → `REQUEST_CHANGES`
 
 #### GitHub — Post Review
 
 ```bash
-# Submit review with comment
 gh pr review {number} --repo {owner}/{repo} \
   --{approve|request-changes|comment} \
   --body "$(cat <<'EOF'
-{review_summary_markdown}
+{confirmed_review_summary_markdown}
 EOF
 )"
 ```
@@ -249,18 +270,17 @@ EOF
 #### GitLab — Post Review Comment
 
 ```bash
-# Add note to MR
 glab mr note {iid} --repo {group/project} -m "$(cat <<'EOF'
-{review_summary_markdown}
+{confirmed_review_summary_markdown}
 EOF
 )"
 ```
 
-### Step 7: Report to User
+### Step 8: Report to User
 
-Display the review summary table in the terminal output. Include:
-- Verdict (approve/request changes/comment)
-- Issues table with severity breakdown
+Display confirmation with:
+- Posted verdict (approve/request changes/comment)
+- Number of issues posted vs total found
 - Link to the posted comment
 
 ## Error Handling
