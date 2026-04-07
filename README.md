@@ -10,7 +10,7 @@ A pre-configured Claude Code setup for Node.js + React teams. Includes agents, s
 | **Commands**      | 8     | Slash commands (`/cmp`, `/ship`, `/ship-release`, `/fix-ci`, `/fix-pr`, etc.)       |
 | **Hooks**         | 12    | Session management, privacy blocking, quality reminders           |
 | **Rules**         | 5     | Development standards, workflows, orchestration protocols         |
-| **Skills**        | 25    | React, Node.js, testing, git, databases, design, PR review, and more               |
+| **Skills**        | 27    | React, Node.js, testing, git, Prisma, Goose, databases, PR review, and more        |
 | **Output Styles** | 6     | Coding level presets (ELI5 to Expert)                             |
 | **Statusline**    | 1     | Real-time session info (bash/zsh)                                 |
 
@@ -51,7 +51,7 @@ The installer will:
 
 ### Backend
 
-`backend-development` · `databases`
+`backend-development` · `databases` · `prisma` · `goose`
 
 ### Utility
 
@@ -126,7 +126,7 @@ Copy `.mcp.json.example` to `.mcp.json` and configure:
 ├── output-styles/         # 6 coding level presets
 ├── schemas/               # JSON schema for .kit.json
 ├── scripts/               # Utility scripts
-└── skills/                # 25 skill directories
+└── skills/                # 27 skill directories
 ```
 
 ## Customization
