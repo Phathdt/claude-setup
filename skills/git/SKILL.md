@@ -1,8 +1,8 @@
 ---
 name: git
-description: 'Git operations with conventional commits and platform-aware GitHub/GitLab workflows. Use for staging, committing, pushing, PRs/MRs, merges, fixing review comments, CI/CD troubleshooting. Auto-detects GitHub (gh) or GitLab (glab) from git remote.'
-argument-hint: 'cm|cp|pr|merge [args]'
-version: 2.0.0
+description: 'Git operations with conventional commits, platform-aware GitHub/GitLab workflows, and worktree management. Use for staging, committing, pushing, PRs/MRs, merges, worktrees, fixing review comments, CI/CD troubleshooting. Auto-detects GitHub (gh) or GitLab (glab) from git remote.'
+argument-hint: 'cm|cp|pr|merge|wt [args]'
+version: 2.1.0
 ---
 
 # Git Operations
@@ -28,6 +28,7 @@ If invoked without arguments, use `AskUserQuestion` to present available git ope
 | `cp`      | Stage files, create commits and push |
 | `pr`      | Create Pull/Merge Request            |
 | `merge`   | Merge branches                       |
+| `wt`      | Manage git worktrees with symlinks   |
 
 Execute git workflows via `git-manager` subagent to isolate verbose output.
 
@@ -47,21 +48,28 @@ Execute git workflows via `git-manager` subagent to isolate verbose output.
 - `merge`: Merge [to-branch] [from-branch]
   - `to-branch`: Target branch (default: main)
   - `from-branch`: Source branch (default: current branch)
+- `wt`: Worktree management [add|cd|root|remove|list]
+  - `add <branch> [-c] [-b <base>]`: Create worktree + symlinks
+  - `cd <branch>`: Navigate to worktree
+  - `root`: Navigate back to repo root
+  - `remove <branch>`: Remove worktree
+  - `list`: List all worktrees
 
 ## Quick Reference
 
-| Task            | Reference                            |
-| --------------- | ------------------------------------ |
-| Commit          | `references/workflow-commit.md`      |
-| Push            | `references/workflow-push.md`        |
-| Pull Request    | `references/workflow-pr.md`          |
-| Merge           | `references/workflow-merge.md`       |
-| Standards       | `references/commit-standards.md`     |
-| Safety          | `references/safety-protocols.md`     |
-| Branches        | `references/branch-management.md`    |
-| GitHub CLI      | `references/github-cli-guide.md`     |
-| GitLab CLI      | `references/gitlab-cli-guide.md`     |
-| CI Error Patterns | `references/ci-error-patterns.md`  |
+| Task              | Reference                            |
+| ----------------- | ------------------------------------ |
+| Commit            | `references/workflow-commit.md`      |
+| Push              | `references/workflow-push.md`        |
+| Pull Request      | `references/workflow-pr.md`          |
+| Merge             | `references/workflow-merge.md`       |
+| Worktree          | `references/workflow-worktree.md`    |
+| Standards         | `references/commit-standards.md`     |
+| Safety            | `references/safety-protocols.md`     |
+| Branches          | `references/branch-management.md`    |
+| GitHub CLI        | `references/github-cli-guide.md`     |
+| GitLab CLI        | `references/gitlab-cli-guide.md`     |
+| CI Error Patterns | `references/ci-error-patterns.md`    |
 
 ## Core Workflow
 
@@ -129,6 +137,7 @@ git commit -m "type(scope): description"
 - `references/workflow-push.md` - Push workflow with error handling
 - `references/workflow-pr.md` - PR/MR creation with remote diff analysis
 - `references/workflow-merge.md` - Branch merge workflow
+- `references/workflow-worktree.md` - Worktree management with auto-symlinks
 - `references/commit-standards.md` - Conventional commit format rules
 - `references/safety-protocols.md` - Secret detection, branch protection
 - `references/branch-management.md` - Naming, lifecycle, strategies

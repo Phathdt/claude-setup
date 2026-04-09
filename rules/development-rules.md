@@ -20,6 +20,24 @@
 - **[IMPORTANT]** Follow the codebase structure and code standards in `./docs` during implementation.
 - **[IMPORTANT]** Do not just simulate the implementation or mocking them, always implement the real code.
 
+## Git Worktree
+
+When asked to work in a new branch or worktree:
+
+1. Create worktree using the `gw` script: `$HOME/.claude/scripts/git-worktree.sh add <branch>`
+2. The script auto-creates the branch if it doesn't exist
+3. It creates symlinks from `worktree.yaml` (node_modules, .env, etc.)
+4. Use the returned worktree path as working directory for all file operations (read/edit/write with absolute paths)
+5. Do NOT use Claude Code's built-in `isolation: "worktree"` — use the `gw` script instead
+
+Example:
+
+```bash
+# Create worktree — captures the path from last line of stdout
+WORKTREE_PATH=$($HOME/.claude/scripts/git-worktree.sh add feature/new-button | tail -1)
+# Then use $WORKTREE_PATH for all file operations
+```
+
 ## Code Quality Guidelines
 
 - Read and follow codebase structure and code standards in `./docs`

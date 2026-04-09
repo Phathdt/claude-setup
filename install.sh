@@ -193,6 +193,38 @@ else
 fi
 
 # -------------------------------------------
+# Set up git worktree wrapper (gw)
+# -------------------------------------------
+info "Setting up git worktree wrapper (gw)..."
+
+GW_SOURCE_LINE="source \"$TARGET/scripts/git-worktree-wrapper.sh\""
+SHELL_RC=""
+
+if [ -n "${ZSH_VERSION:-}" ] || [ -f "$HOME/.zshrc" ]; then
+  SHELL_RC="$HOME/.zshrc"
+elif [ -f "$HOME/.bashrc" ]; then
+  SHELL_RC="$HOME/.bashrc"
+fi
+
+if [ -n "$SHELL_RC" ]; then
+  if grep -qF "git-worktree-wrapper.sh" "$SHELL_RC" 2>/dev/null; then
+    info "gw wrapper already sourced in $SHELL_RC"
+  else
+    read -p "Add gw (git worktree) helper to $SHELL_RC? [Y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+      echo "" >> "$SHELL_RC"
+      echo "# Claude Kit — git worktree helper" >> "$SHELL_RC"
+      echo "$GW_SOURCE_LINE" >> "$SHELL_RC"
+      ok "Added gw wrapper to $SHELL_RC (restart shell or: source $SHELL_RC)"
+    fi
+  fi
+else
+  warn "Could not detect shell RC file. Add manually:"
+  echo "  $GW_SOURCE_LINE"
+fi
+
+# -------------------------------------------
 # Summary
 # -------------------------------------------
 echo ""
@@ -210,6 +242,7 @@ echo "  - 5 rule sets (dev standards, workflows)"
 echo "  - 27 skills (React, Node.js, testing, git, Prisma, Goose, PR review, etc.)"
 echo "  - 6 output styles (coding levels)"
 echo "  - Statusline (bash/zsh)"
+echo "  - gw — git worktree helper with auto-symlinks"
 echo ""
 echo "Next steps:"
 echo "  1. Edit ~/.claude/.env with your API keys (optional)"
