@@ -47,10 +47,10 @@ Config (worktree.yml):
 
   symlinks:
     - .env
-    - node_modules
+  copies:
+    - node_modules       # APFS clone, instant
   scripts:
-    - yarn install
-    - echo "ready"
+    - yarn prepare
 EOF
   exit 1
 }
@@ -79,6 +79,10 @@ parse_symlinks() {
   { _parse_section "$GLOBAL_CONFIG" "symlinks"; _parse_section "$CONFIG_FILE" "symlinks"; } | sort -u
 }
 
+parse_copies() {
+  { _parse_section "$GLOBAL_CONFIG" "copies"; _parse_section "$CONFIG_FILE" "copies"; } | sort -u
+}
+
 parse_scripts() {
   # Global first, then project — order matters, no dedup
   _parse_section "$GLOBAL_CONFIG" "scripts"
@@ -99,6 +103,25 @@ create_symlinks() {
     mkdir -p "$(dirname "$target")"
     ln -sf "$source" "$target"
     echo "  Linked: $path" >&2
+  done
+}
+
+create_copies() {
+  local worktree_dir="$1"
+
+  parse_copies | while IFS= read -r path; do
+    local source="$REPO_ROOT/$path"
+    local target="$worktree_dir/$path"
+
+    [[ ! -e "$source" ]] && continue
+
+    rm -rf "$target"
+    mkdir -p "$(dirname "$target")"
+    # CoW copy: macOS (cp -c) or Linux btrfs/xfs (cp --reflink=auto), fallback to regular copy
+    cp -c -R "$source" "$target" 2>/dev/null \
+      || cp -R --reflink=auto "$source" "$target" 2>/dev/null \
+      || cp -R "$source" "$target"
+    echo "  Copied: $path" >&2
   done
 }
 
@@ -153,6 +176,9 @@ cmd_add() {
 
   echo "Creating symlinks..." >&2
   create_symlinks "$worktree_dir"
+
+  echo "Copying files..." >&2
+  create_copies "$worktree_dir"
 
   echo "Running scripts..." >&2
   run_scripts "$worktree_dir"

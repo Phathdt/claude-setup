@@ -50,6 +50,21 @@ parse_section() {
   echo "  Linked: $path" >&2
 done
 
+# Copies: APFS clone (instant, zero disk)
+{ parse_section "$GLOBAL_CONFIG" "copies"; parse_section "$PROJECT_CONFIG" "copies"; } | sort -u | while IFS= read -r path; do
+  source_path="$REPO_ROOT/$path"
+  target_path="$WORKTREE_PATH/$path"
+
+  [[ ! -e "$source_path" ]] && continue
+
+  rm -rf "$target_path"
+  mkdir -p "$(dirname "$target_path")"
+  cp -c -R "$source_path" "$target_path" 2>/dev/null \
+    || cp -R --reflink=auto "$source_path" "$target_path" 2>/dev/null \
+    || cp -R "$source_path" "$target_path"
+  echo "  Copied: $path" >&2
+done
+
 # Scripts: global first, then project (order matters)
 {
   parse_section "$GLOBAL_CONFIG" "scripts"
