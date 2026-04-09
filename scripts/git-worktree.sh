@@ -33,7 +33,7 @@ Commands:
   add <branch>       Create worktree, symlink, and cd into it
   cd <branch>        cd to existing worktree
   root               cd back to repo root
-  remove <branch>    Remove worktree and clean up
+  remove <branch>    Remove worktree (add -D to also delete branch)
   ls                 List all worktrees
 
 Options:
@@ -211,7 +211,17 @@ cmd_root() {
 }
 
 cmd_remove() {
-  local branch="${1:-}"
+  local branch=""
+  local delete_branch=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -D) delete_branch=true; shift ;;
+      -*) echo "Unknown option: $1"; usage ;;
+      *) branch="$1"; shift ;;
+    esac
+  done
+
   [[ -z "$branch" ]] && { echo "Error: branch name required"; usage; }
 
   local dir_name
@@ -225,6 +235,12 @@ cmd_remove() {
 
   echo "Removing worktree: $branch" >&2
   git worktree remove "$worktree_dir" --force
+
+  if $delete_branch; then
+    echo "Deleting branch: $branch" >&2
+    git branch -D "$branch" 2>/dev/null || echo "  Warning: branch $branch not found or is current" >&2
+  fi
+
   echo "Done" >&2
 
   echo "$REPO_ROOT"
@@ -245,7 +261,7 @@ case "$command" in
   add)    cmd_add "$@" ;;
   cd)     cmd_cd "${1:-}" ;;
   root)   cmd_root ;;
-  remove) cmd_remove "${1:-}" ;;
+  remove) cmd_remove "$@" ;;
   ls|list) cmd_list ;;
   *)       echo "Unknown command: $command"; usage ;;
 esac
