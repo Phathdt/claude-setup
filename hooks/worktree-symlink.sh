@@ -1,6 +1,6 @@
 #!/bin/bash
 # worktree-symlink.sh — Hook for WorktreeCreate event
-# Reads worktree.yaml from repo root and creates symlinks in the new worktree
+# Reads worktree.yml from ~/ (global) and repo root (project), creates symlinks
 
 INPUT=$(cat)
 WORKTREE_PATH=$(echo "$INPUT" | jq -r '.worktree_path // empty')
@@ -13,34 +13,35 @@ fi
 
 # Resolve real repo root (in case cwd is already a worktree)
 REPO_ROOT=$(cd "$PROJECT_DIR" && git rev-parse --path-format=absolute --git-common-dir 2>/dev/null | xargs dirname)
-CONFIG_FILE="$REPO_ROOT/worktree.yaml"
+GLOBAL_CONFIG="$HOME/.worktree.yml"
+PROJECT_CONFIG="$REPO_ROOT/worktree.yml"
 
-if [[ ! -f "$CONFIG_FILE" ]]; then
-  echo "No worktree.yaml found, skipping symlinks" >&2
-  echo "$WORKTREE_PATH"
-  exit 0
-fi
+# Parse yaml file, output one path per line
+parse_yaml() {
+  local file="$1"
+  [[ ! -f "$file" ]] && return
+  while IFS= read -r line; do
+    line=$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+    [[ -z "$line" || "$line" =~ ^# || "$line" =~ ^[a-zA-Z_-]+:$ ]] && continue
+    line=$(echo "$line" | sed 's/^-[[:space:]]*//')
+    line="${line%/}"
+    echo "$line"
+  done < "$file"
+}
 
-# Parse worktree.yaml and create symlinks
-while IFS= read -r line; do
-  line=$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
-  [[ -z "$line" || "$line" =~ ^# || "$line" =~ ^[a-zA-Z_-]+:$ ]] && continue
-  line=$(echo "$line" | sed 's/^-[[:space:]]*//')
-  line="${line%/}"
+# Merge global + project configs, deduplicate
+{ parse_yaml "$GLOBAL_CONFIG"; parse_yaml "$PROJECT_CONFIG"; } | sort -u | while IFS= read -r path; do
+  source_path="$REPO_ROOT/$path"
+  target_path="$WORKTREE_PATH/$path"
 
-  source_path="$REPO_ROOT/$line"
-  target_path="$WORKTREE_PATH/$line"
-
-  if [[ ! -e "$source_path" ]]; then
-    echo "  Skip: $line (not found in repo root)" >&2
-    continue
-  fi
+  # Silently skip if source doesn't exist
+  [[ ! -e "$source_path" ]] && continue
 
   rm -rf "$target_path"
   mkdir -p "$(dirname "$target_path")"
   ln -sf "$source_path" "$target_path"
-  echo "  Linked: $line" >&2
-done < "$CONFIG_FILE"
+  echo "  Linked: $path" >&2
+done
 
 echo "$WORKTREE_PATH"
 exit 0

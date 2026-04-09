@@ -18,9 +18,14 @@ Manual setup if needed:
 source /path/to/scripts/git-worktree-wrapper.sh
 ```
 
-## Config: `worktree.yaml`
+## Config: `worktree.yml`
 
-Place at repo root. Lists paths to symlink from main worktree into new worktrees:
+Two levels, merged together with deduplication:
+
+- **Global**: `~/.worktree.yml` — shared across all repos
+- **Project**: `<repo-root>/worktree.yml` — project-specific
+
+Missing sources are silently skipped (global config may define paths not in every project).
 
 ```yaml
 symlinks:
@@ -34,7 +39,7 @@ symlinks:
 
 ### `gw add <branch> [-b <base>]`
 
-Create worktree at `.claude/worktrees/<branch>` + auto cd into it. Auto-creates branch if it doesn't exist.
+Create worktree at `worktrees/<branch>` + auto cd into it. Auto-creates branch if it doesn't exist.
 
 ```bash
 # Auto-creates branch if not exists, based on HEAD
@@ -42,9 +47,6 @@ gw add feature/auth
 
 # Create from specific base branch
 gw add feature/auth -b develop
-
-# Checkout existing branch into worktree
-gw add feature/auth
 ```
 
 ### `gw cd <branch>`
@@ -65,7 +67,7 @@ gw root
 
 ### `gw remove <branch>`
 
-Remove worktree (force). Auto cd back to repo root. Symlinks are removed but source files (node_modules, .env) at repo root are untouched.
+Remove worktree (force). Auto cd back to repo root. Symlinks are removed but source files at repo root are untouched.
 
 ```bash
 gw remove feature/auth
@@ -83,26 +85,23 @@ gw ls
 
 ```
 repo-root/
-├── .claude/
-│   └── worktrees/
-│       ├── feature/
-│       │   └── auth/              # worktree checkout
-│       │       ├── .env -> ../../../../.env
-│       │       ├── node_modules -> ../../../../node_modules
-│       │       └── ...
-│       └── fix/
-│           └── bug/
-├── worktree.yaml                  # symlink config
-└── scripts/
-    ├── git-worktree.sh
-    └── git-worktree-wrapper.sh
+├── worktrees/
+│   ├── feature/
+│   │   └── auth/              # worktree checkout
+│   │       ├── .env -> ../../../.env
+│   │       ├── node_modules -> ../../../node_modules
+│   │       └── ...
+│   └── fix/
+│       └── bug/
+├── worktree.yml              # project-level symlink config
+~/.worktree.yml               # global symlink config
 ```
 
 ## Claude Code Integration
 
 ### WorktreeCreate Hook
 
-Claude Code's built-in worktree (`isolation: "worktree"`) triggers the `WorktreeCreate` hook, which runs `hooks/worktree-symlink.sh` to auto-create symlinks from `worktree.yaml`.
+Claude Code's built-in worktree (`isolation: "worktree"`) triggers the `WorktreeCreate` hook, which runs `hooks/worktree-symlink.sh` to auto-create symlinks from both global and project `worktree.yml`.
 
 ### Manual Workflow
 
@@ -125,22 +124,22 @@ Override worktree base path via environment variable:
 export GW_WORKTREE_BASE="$HOME/worktrees"
 ```
 
-Default: `$REPO_ROOT/.claude/worktrees`
+Default: `$REPO_ROOT/worktrees`
 
 ## Error Handling
 
 | Error | Action |
 | --- | --- |
 | Not a git repo | Exit with error |
-| No `worktree.yaml` | Warn, skip symlinks |
+| No configs found | No symlinks created (no error) |
 | Worktree already exists | Exit with error |
 | Worktree not found (cd/remove) | Exit with error |
-| Source path missing for symlink | Skip with warning |
+| Source path missing for symlink | Silently skipped |
 
 ## Best Practices
 
-- Add `.claude/worktrees/` to `.gitignore`
-- Keep `worktree.yaml` in version control
+- Add `worktrees/` to `.gitignore`
+- Put common symlinks in `~/.worktree.yml` (e.g., `.env`, `node_modules`)
+- Put project-specific symlinks in `<repo>/worktree.yml`
 - Use worktrees for parallel feature development without stashing
-- Symlink shared heavy dirs (node_modules) to save disk space and install time
 - Remove worktrees when done to keep things clean

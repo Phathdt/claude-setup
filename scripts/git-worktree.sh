@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# git-worktree.sh — Create/remove git worktrees with automatic symlinks from worktree.yaml
+# git-worktree.sh — Create/remove git worktrees with automatic symlinks from worktree.yml
 #
 # Usage: source the gw() function from your .zshrc/.bashrc, then use:
 #   gw add <branch>       — create worktree + cd into it
@@ -16,8 +16,9 @@ set -euo pipefail
 # Resolve the real repo root (not the worktree root)
 _git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || { echo "Error: not a git repository"; exit 1; }
 REPO_ROOT=$(dirname "$_git_common_dir")
-CONFIG_FILE="$REPO_ROOT/worktree.yaml"
-WORKTREE_BASE="${GW_WORKTREE_BASE:-$REPO_ROOT/.claude/worktrees}"
+GLOBAL_CONFIG="$HOME/.worktree.yml"
+CONFIG_FILE="$REPO_ROOT/worktree.yml"
+WORKTREE_BASE="${GW_WORKTREE_BASE:-$REPO_ROOT/worktrees}"
 
 usage() {
   cat <<EOF
@@ -34,7 +35,11 @@ Options:
   -c, --create       Create branch if it doesn't exist (used with 'add')
   -b <base>          Base branch for new branch (default: current branch)
 
-Config (worktree.yaml at repo root):
+Config (worktree.yml):
+  Global: ~/.worktree.yml (shared across all repos)
+  Project: <repo-root>/worktree.yml (project-specific)
+  Both are merged; missing sources are silently skipped.
+
   symlinks:
     - .env
     - node_modules
@@ -44,19 +49,21 @@ EOF
   exit 1
 }
 
-parse_config() {
-  if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "Warning: $CONFIG_FILE not found, skipping symlinks" >&2
-    return
-  fi
-
+_parse_yaml() {
+  local file="$1"
+  [[ ! -f "$file" ]] && return
   while IFS= read -r line; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# || "$line" =~ ^[a-zA-Z_-]+:$ ]] && continue
     line=$(echo "$line" | sed 's/^-[[:space:]]*//')
     line="${line%/}"
     echo "$line"
-  done < "$CONFIG_FILE"
+  done < "$file"
+}
+
+parse_config() {
+  # Merge global (~/) and project-level configs, deduplicate
+  { _parse_yaml "$GLOBAL_CONFIG"; _parse_yaml "$CONFIG_FILE"; } | sort -u
 }
 
 create_symlinks() {
@@ -66,10 +73,8 @@ create_symlinks() {
     local source="$REPO_ROOT/$path"
     local target="$worktree_dir/$path"
 
-    if [[ ! -e "$source" ]]; then
-      echo "  Skip: $path (not found in repo root)" >&2
-      continue
-    fi
+    # Silently skip if source doesn't exist (global config may define paths not in this project)
+    [[ ! -e "$source" ]] && continue
 
     rm -rf "$target"
     mkdir -p "$(dirname "$target")"
