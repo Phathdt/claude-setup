@@ -20,6 +20,11 @@ GLOBAL_CONFIG="$HOME/.worktree.yml"
 CONFIG_FILE="$REPO_ROOT/worktree.yml"
 WORKTREE_BASE="${GW_WORKTREE_BASE:-$REPO_ROOT/worktrees}"
 
+# Sanitize branch name for directory: feature/abc → feature-abc
+sanitize_dir() {
+  echo "$1" | sed 's|/|-|g'
+}
+
 usage() {
   cat <<EOF
 Usage: gw <command> <branch> [options]
@@ -43,33 +48,47 @@ Config (worktree.yml):
   symlinks:
     - .env
     - node_modules
-    - fun/node_modules
-    - .turbo
+  scripts:
+    - yarn install
+    - echo "ready"
 EOF
   exit 1
 }
 
-_parse_yaml() {
-  local file="$1"
+_parse_section() {
+  local file="$1" section="$2"
   [[ ! -f "$file" ]] && return
+  local in_section=false
   while IFS= read -r line; do
-    line=$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
-    [[ -z "$line" || "$line" =~ ^# || "$line" =~ ^[a-zA-Z_-]+:$ ]] && continue
-    line=$(echo "$line" | sed 's/^-[[:space:]]*//')
-    line="${line%/}"
-    echo "$line"
+    local trimmed
+    trimmed=$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+    [[ -z "$trimmed" || "$trimmed" =~ ^# ]] && continue
+    # Section header (e.g., "symlinks:" or "scripts:")
+    if [[ "$trimmed" =~ ^[a-zA-Z_-]+:$ ]]; then
+      [[ "$trimmed" == "${section}:" ]] && in_section=true || in_section=false
+      continue
+    fi
+    if $in_section; then
+      trimmed=$(echo "$trimmed" | sed 's/^-[[:space:]]*//')
+      echo "$trimmed"
+    fi
   done < "$file"
 }
 
-parse_config() {
-  # Merge global (~/) and project-level configs, deduplicate
-  { _parse_yaml "$GLOBAL_CONFIG"; _parse_yaml "$CONFIG_FILE"; } | sort -u
+parse_symlinks() {
+  { _parse_section "$GLOBAL_CONFIG" "symlinks"; _parse_section "$CONFIG_FILE" "symlinks"; } | sort -u
+}
+
+parse_scripts() {
+  # Global first, then project — order matters, no dedup
+  _parse_section "$GLOBAL_CONFIG" "scripts"
+  _parse_section "$CONFIG_FILE" "scripts"
 }
 
 create_symlinks() {
   local worktree_dir="$1"
 
-  parse_config | while IFS= read -r path; do
+  parse_symlinks | while IFS= read -r path; do
     local source="$REPO_ROOT/$path"
     local target="$worktree_dir/$path"
 
@@ -80,6 +99,16 @@ create_symlinks() {
     mkdir -p "$(dirname "$target")"
     ln -sf "$source" "$target"
     echo "  Linked: $path" >&2
+  done
+}
+
+run_scripts() {
+  local worktree_dir="$1"
+
+  parse_scripts | while IFS= read -r cmd; do
+    [[ -z "$cmd" ]] && continue
+    echo "  Run: $cmd" >&2
+    (cd "$worktree_dir" && eval "$cmd") >&2 2>&1 || echo "  Warning: script failed: $cmd" >&2
   done
 }
 
@@ -99,14 +128,16 @@ cmd_add() {
 
   [[ -z "$branch" ]] && { echo "Error: branch name required"; usage; }
 
-  local worktree_dir="$WORKTREE_BASE/$branch"
+  local dir_name
+  dir_name=$(sanitize_dir "$branch")
+  local worktree_dir="$WORKTREE_BASE/$dir_name"
 
   if [[ -d "$worktree_dir" ]]; then
     echo "Error: worktree already exists at $worktree_dir" >&2
     exit 1
   fi
 
-  echo "Creating worktree for branch: $branch" >&2
+  echo "Creating worktree for branch: $branch → $dir_name" >&2
 
   # Auto-detect: create branch if it doesn't exist
   if ! $create_branch && ! git rev-parse --verify "$branch" &>/dev/null; then
@@ -123,6 +154,9 @@ cmd_add() {
   echo "Creating symlinks..." >&2
   create_symlinks "$worktree_dir"
 
+  echo "Running scripts..." >&2
+  run_scripts "$worktree_dir"
+
   echo "" >&2
   echo "Worktree ready: $worktree_dir" >&2
 
@@ -134,7 +168,9 @@ cmd_cd() {
   local branch="${1:-}"
   [[ -z "$branch" ]] && { echo "Error: branch name required"; usage; }
 
-  local worktree_dir="$WORKTREE_BASE/$branch"
+  local dir_name
+  dir_name=$(sanitize_dir "$branch")
+  local worktree_dir="$WORKTREE_BASE/$dir_name"
 
   if [[ ! -d "$worktree_dir" ]]; then
     echo "Error: worktree not found at $worktree_dir" >&2
@@ -152,7 +188,9 @@ cmd_remove() {
   local branch="${1:-}"
   [[ -z "$branch" ]] && { echo "Error: branch name required"; usage; }
 
-  local worktree_dir="$WORKTREE_BASE/$branch"
+  local dir_name
+  dir_name=$(sanitize_dir "$branch")
+  local worktree_dir="$WORKTREE_BASE/$dir_name"
 
   if [[ ! -d "$worktree_dir" ]]; then
     echo "Error: worktree not found at $worktree_dir" >&2

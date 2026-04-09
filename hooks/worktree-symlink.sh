@@ -1,6 +1,7 @@
 #!/bin/bash
 # worktree-symlink.sh — Hook for WorktreeCreate event
-# Reads worktree.yml from ~/ (global) and repo root (project), creates symlinks
+# Reads worktree.yml from ~/ (global) and repo root (project)
+# Creates symlinks and runs scripts
 
 INPUT=$(cat)
 WORKTREE_PATH=$(echo "$INPUT" | jq -r '.worktree_path // empty')
@@ -16,31 +17,47 @@ REPO_ROOT=$(cd "$PROJECT_DIR" && git rev-parse --path-format=absolute --git-comm
 GLOBAL_CONFIG="$HOME/.worktree.yml"
 PROJECT_CONFIG="$REPO_ROOT/worktree.yml"
 
-# Parse yaml file, output one path per line
-parse_yaml() {
-  local file="$1"
+# Parse a section from yaml file
+parse_section() {
+  local file="$1" section="$2"
   [[ ! -f "$file" ]] && return
+  local in_section=false
   while IFS= read -r line; do
-    line=$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
-    [[ -z "$line" || "$line" =~ ^# || "$line" =~ ^[a-zA-Z_-]+:$ ]] && continue
-    line=$(echo "$line" | sed 's/^-[[:space:]]*//')
-    line="${line%/}"
-    echo "$line"
+    local trimmed
+    trimmed=$(echo "$line" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+    [[ -z "$trimmed" || "$trimmed" =~ ^# ]] && continue
+    if [[ "$trimmed" =~ ^[a-zA-Z_-]+:$ ]]; then
+      [[ "$trimmed" == "${section}:" ]] && in_section=true || in_section=false
+      continue
+    fi
+    if $in_section; then
+      trimmed=$(echo "$trimmed" | sed 's/^-[[:space:]]*//')
+      echo "$trimmed"
+    fi
   done < "$file"
 }
 
-# Merge global + project configs, deduplicate
-{ parse_yaml "$GLOBAL_CONFIG"; parse_yaml "$PROJECT_CONFIG"; } | sort -u | while IFS= read -r path; do
+# Symlinks: merge global + project, deduplicate
+{ parse_section "$GLOBAL_CONFIG" "symlinks"; parse_section "$PROJECT_CONFIG" "symlinks"; } | sort -u | while IFS= read -r path; do
   source_path="$REPO_ROOT/$path"
   target_path="$WORKTREE_PATH/$path"
 
-  # Silently skip if source doesn't exist
   [[ ! -e "$source_path" ]] && continue
 
   rm -rf "$target_path"
   mkdir -p "$(dirname "$target_path")"
   ln -sf "$source_path" "$target_path"
   echo "  Linked: $path" >&2
+done
+
+# Scripts: global first, then project (order matters)
+{
+  parse_section "$GLOBAL_CONFIG" "scripts"
+  parse_section "$PROJECT_CONFIG" "scripts"
+} | while IFS= read -r cmd; do
+  [[ -z "$cmd" ]] && continue
+  echo "  Run: $cmd" >&2
+  (cd "$WORKTREE_PATH" && eval "$cmd") >&2 2>&1 || echo "  Warning: script failed: $cmd" >&2
 done
 
 echo "$WORKTREE_PATH"
