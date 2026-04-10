@@ -37,21 +37,25 @@ Parse `$ARGUMENTS` to extract platform, project, and PR/MR number.
 
 **IMPORTANT:** Reviewing only the diff is insufficient — you MUST read full source files to understand context. Use a git worktree to isolate the review — never checkout/switch branches in the main working directory.
 
-#### 2a. Get PR/MR metadata & source branch
+#### 2a. Get PR/MR metadata & extract branches
 
 ```bash
-# GitHub
+# GitHub — extract baseRefName (target) and headRefName (source)
 gh pr view {number} --json title,body,baseRefName,headRefName,additions,deletions,changedFiles,author
 
 # GitLab
 glab mr view {iid}
 ```
 
+From the response, extract:
+- `{target_branch}` = `baseRefName` (e.g., `main`, `develop`)
+- `{source_branch}` = `headRefName` (e.g., `feature/auth`)
+
 #### 2b. Create worktree for source branch
 
 ```bash
-# Fetch latest from remote
-git fetch origin
+# Fetch latest — both target and source branches
+git fetch origin {target_branch} {source_branch}
 
 # Create isolated worktree for the source branch (does NOT affect current branch)
 WORKTREE_PATH=$($HOME/.claude/scripts/git-worktree.sh add {source_branch} | tail -1)
@@ -62,11 +66,12 @@ git -C "$WORKTREE_PATH" pull origin {source_branch}
 
 All subsequent file reads and verification checks use `$WORKTREE_PATH` as the working directory.
 
-#### 2c. Get the diff against target branch
+#### 2c. Get the diff between target and source branch
 
 ```bash
-git -C "$WORKTREE_PATH" diff {target_branch}...{source_branch} --stat
-git -C "$WORKTREE_PATH" diff {target_branch}...{source_branch}
+# Diff source branch against its target (base) branch
+git -C "$WORKTREE_PATH" diff origin/{target_branch}...origin/{source_branch} --stat
+git -C "$WORKTREE_PATH" diff origin/{target_branch}...origin/{source_branch}
 ```
 
 #### 2d. Read full source of changed files
