@@ -33,9 +33,9 @@ Parse `$ARGUMENTS` to extract platform, project, and PR/MR number.
 - URL contains `github.com` → GitHub → use `gh` CLI
 - URL contains `gitlab` → GitLab → use `glab` CLI
 
-### Step 2: Checkout Branch & Gather Context
+### Step 2: Create Worktree & Gather Context
 
-**IMPORTANT:** Reviewing only the diff is insufficient — you MUST checkout the branch and read full source files to understand context.
+**IMPORTANT:** Reviewing only the diff is insufficient — you MUST read full source files to understand context. Use a git worktree to isolate the review — never checkout/switch branches in the main working directory.
 
 #### 2a. Get PR/MR metadata & source branch
 
@@ -47,55 +47,51 @@ gh pr view {number} --json title,body,baseRefName,headRefName,additions,deletion
 glab mr view {iid}
 ```
 
-#### 2b. Checkout source branch with latest code
+#### 2b. Create worktree for source branch
 
 ```bash
-# Save current branch name for later restore
-ORIGINAL_BRANCH=$(git branch --show-current)
-
-# Stash current work if any
-git stash
-
 # Fetch latest from remote
 git fetch origin
 
-# Pull latest target branch (e.g., main/develop)
-git checkout {target_branch}
-git pull origin {target_branch}
+# Create isolated worktree for the source branch (does NOT affect current branch)
+WORKTREE_PATH=$($HOME/.claude/scripts/git-worktree.sh add {source_branch} | tail -1)
 
-# Checkout and pull latest source branch
-git checkout {source_branch}
-git pull origin {source_branch}
+# Pull latest in the worktree
+git -C "$WORKTREE_PATH" pull origin {source_branch}
 ```
 
-#### 2c. Get the diff against latest target branch
+All subsequent file reads and verification checks use `$WORKTREE_PATH` as the working directory.
+
+#### 2c. Get the diff against target branch
 
 ```bash
-git diff {target_branch}...{source_branch} --stat
-git diff {target_branch}...{source_branch}
+git -C "$WORKTREE_PATH" diff {target_branch}...{source_branch} --stat
+git -C "$WORKTREE_PATH" diff {target_branch}...{source_branch}
 ```
 
 #### 2d. Read full source of changed files
 
-For each changed file:
+For each changed file, read from `$WORKTREE_PATH`:
 1. **Read the full file** — not just diff hunks — to understand surrounding context
 2. **Trace imports/dependencies** — read utility functions, shared hooks, types, configs referenced by changed code
 3. **Verify before flagging** — if code uses a library feature (e.g., dayjs plugins, ORM config), check that the setup actually exists before reporting as missing
 
 This avoids false positives like "plugin might not be configured" when it already is.
 
-#### 2e. Restore original branch after review
+#### 2e. Cleanup worktree after review
+
+After the entire review is complete (after Step 7 or if user skips posting):
 
 ```bash
-git checkout $ORIGINAL_BRANCH
-git stash pop  # if stashed
+# Remove worktree — does NOT delete the remote branch
+$HOME/.claude/scripts/git-worktree.sh remove {source_branch}
 ```
 
 **If diff is too large (>5000 lines):** Focus on changed files list first, then review file-by-file for critical files. Summarize skipped files.
 
 ### Step 3: Verification Checks
 
-Before code review, run verification checks on the PR/MR branch. Checkout the branch first, then run checks in parallel.
+Before code review, run verification checks inside `$WORKTREE_PATH`. Run checks in parallel.
 
 **Auto-detect available checks** by scanning for config files in the repo root:
 
@@ -134,7 +130,7 @@ If any check fails, include the error output (truncated to 20 lines) below the t
 
 ### Step 4: Code Review (Parallel Agents)
 
-Dispatch **two subagents in parallel**. Each agent receives the diff AND has access to the checked-out branch to read full source files.
+Dispatch **two subagents in parallel**. Each agent receives the diff AND the `$WORKTREE_PATH` to read full source files.
 
 **Agents MUST read full source files** — not just diff hunks — to verify context before flagging issues. If a function uses a library feature, trace the import chain to confirm whether the setup/config exists.
 
