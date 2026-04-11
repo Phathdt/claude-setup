@@ -34,6 +34,7 @@ Commands:
   cd <branch>        cd to existing worktree
   root               cd back to repo root
   remove <branch>    Remove worktree (add -D to also delete branch)
+  remove --all       Remove all worktrees (add -D to also delete branches)
   ls                 List all worktrees
 
 Options:
@@ -213,14 +214,22 @@ cmd_root() {
 cmd_remove() {
   local branch=""
   local delete_branch=false
+  local remove_all=false
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -D) delete_branch=true; shift ;;
+      --all) remove_all=true; shift ;;
       -*) echo "Unknown option: $1"; usage ;;
       *) branch="$1"; shift ;;
     esac
   done
+
+  if $remove_all; then
+    _remove_all_worktrees "$delete_branch"
+    echo "$REPO_ROOT"
+    return
+  fi
 
   [[ -z "$branch" ]] && { echo "Error: branch name required"; usage; }
 
@@ -244,6 +253,41 @@ cmd_remove() {
   echo "Done" >&2
 
   echo "$REPO_ROOT"
+}
+
+_remove_all_worktrees() {
+  local delete_branch="$1"
+  local count=0
+
+  # List worktrees excluding the main one (first entry is always the main worktree)
+  while IFS= read -r line; do
+    local wt_path wt_branch
+    wt_path=$(echo "$line" | awk '{print $1}')
+    wt_branch=$(echo "$line" | grep -o '\[.*\]' | tr -d '[]')
+
+    # Skip the main worktree
+    [[ "$wt_path" == "$REPO_ROOT" ]] && continue
+
+    echo "Removing worktree: $wt_branch ($wt_path)" >&2
+    git worktree remove "$wt_path" --force 2>/dev/null || {
+      echo "  Warning: failed to remove $wt_path, trying cleanup" >&2
+      rm -rf "$wt_path"
+      git worktree prune
+    }
+
+    if [[ "$delete_branch" == "true" ]] && [[ -n "$wt_branch" ]]; then
+      echo "Deleting branch: $wt_branch" >&2
+      git branch -D "$wt_branch" 2>/dev/null || true
+    fi
+
+    ((count++))
+  done < <(git worktree list)
+
+  if [[ $count -eq 0 ]]; then
+    echo "No worktrees to remove" >&2
+  else
+    echo "Removed $count worktree(s)" >&2
+  fi
 }
 
 cmd_list() {
