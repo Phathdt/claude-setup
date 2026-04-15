@@ -50,9 +50,9 @@ $ARGUMENTS
      - GitLab: `glab mr create --title "fix: <description>" --description "..." --target-branch release/<version>`
    - PR body should include: Summary, Cherry-picked commits list, Original PR references if available
 
-9. **Set squash commit message**:
+9. **Display squash commit message**:
    - Build the commit list by running `git log --format='- %h %s' <hash> -1` for each cherry-picked commit
-   - Compose the squash commit message:
+   - Display the message for the user to copy:
      ```
      <PR/MR title>
 
@@ -60,12 +60,6 @@ $ARGUMENTS
      - <short-hash> <commit-subject>
      - <short-hash> <commit-subject>
      ```
-   - Auto-set it on the MR/PR:
-     - GitLab: `glab api -X PUT "projects/:id/merge_requests/:iid" -f squash_commit_message="<message>"`
-       - Get project ID: `glab api "projects/:fullpath" --jq '.id'` (URL-encode the project path)
-       - Get MR IID from the `glab mr create` output
-     - GitHub: Display the message for the user (GitHub sets squash message at merge time via `gh pr merge --squash --subject "<title>" --body "<body>"`)
-   - Display the message to the user for confirmation
 
 ## Usage
 
