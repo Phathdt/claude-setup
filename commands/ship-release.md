@@ -50,6 +50,19 @@ $ARGUMENTS
      - GitLab: `glab mr create --title "fix: <description>" --description "..." --target-branch release/<version>`
    - PR body should include: Summary, Cherry-picked commits list, Original PR references if available
 
+9. **Generate merge commit message**:
+   - After the PR/MR is created, generate and display a merge commit message in this format:
+     ```
+     <PR/MR title>
+
+     cherry-picked from main:
+     - <short-hash> <commit-subject>
+     - <short-hash> <commit-subject>
+     ```
+   - Build the list by running `git log --format='- %h %s' <hash> -1` for each cherry-picked commit
+   - Show the message to the user so they can use it when merging the PR/MR
+   - If the platform supports merge commit messages, suggest using this as the merge commit body
+
 ## Usage
 
 ```
