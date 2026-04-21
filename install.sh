@@ -193,36 +193,53 @@ else
 fi
 
 # -------------------------------------------
-# Set up git worktree wrapper (gw)
+# Set up shell wrappers (gw, kp)
 # -------------------------------------------
-info "Setting up git worktree wrapper (gw)..."
-
-GW_SOURCE_LINE="source \"$TARGET/scripts/git-worktree-wrapper.sh\""
 SHELL_RC=""
-
 if [ -n "${ZSH_VERSION:-}" ] || [ -f "$HOME/.zshrc" ]; then
   SHELL_RC="$HOME/.zshrc"
 elif [ -f "$HOME/.bashrc" ]; then
   SHELL_RC="$HOME/.bashrc"
 fi
 
-if [ -n "$SHELL_RC" ]; then
-  if grep -qF "git-worktree-wrapper.sh" "$SHELL_RC" 2>/dev/null; then
-    info "gw wrapper already sourced in $SHELL_RC"
-  else
-    read -p "Add gw (git worktree) helper to $SHELL_RC? [Y/n] " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-      echo "" >> "$SHELL_RC"
-      echo "# Claude Kit — git worktree helper" >> "$SHELL_RC"
-      echo "$GW_SOURCE_LINE" >> "$SHELL_RC"
-      ok "Added gw wrapper to $SHELL_RC (restart shell or: source $SHELL_RC)"
-    fi
+# name | wrapper file | description
+WRAPPERS=(
+  "gw|git-worktree-wrapper.sh|git worktree helper"
+  "kp|kill-port-wrapper.sh|kill-port helper"
+)
+
+for entry in "${WRAPPERS[@]}"; do
+  IFS='|' read -r NAME WRAPPER DESC <<< "$entry"
+  WRAPPER_PATH="$TARGET/scripts/$WRAPPER"
+  SOURCE_LINE="source \"$WRAPPER_PATH\""
+
+  info "Setting up $NAME ($DESC)..."
+
+  if [ ! -f "$WRAPPER_PATH" ]; then
+    warn "$WRAPPER not found at $WRAPPER_PATH — skipping."
+    continue
   fi
-else
-  warn "Could not detect shell RC file. Add manually:"
-  echo "  $GW_SOURCE_LINE"
-fi
+
+  if [ -z "$SHELL_RC" ]; then
+    warn "Could not detect shell RC file. Add manually:"
+    echo "  $SOURCE_LINE"
+    continue
+  fi
+
+  if grep -qF "$WRAPPER" "$SHELL_RC" 2>/dev/null; then
+    info "$NAME wrapper already sourced in $SHELL_RC"
+    continue
+  fi
+
+  read -p "Add $NAME ($DESC) to $SHELL_RC? [Y/n] " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    echo "" >> "$SHELL_RC"
+    echo "# $DESC" >> "$SHELL_RC"
+    echo "$SOURCE_LINE" >> "$SHELL_RC"
+    ok "Added $NAME wrapper to $SHELL_RC (restart shell or: source $SHELL_RC)"
+  fi
+done
 
 # -------------------------------------------
 # Summary
@@ -243,6 +260,7 @@ echo "  - 27 skills (React, Node.js, testing, git, Prisma, Goose, PR review, etc
 echo "  - 6 output styles (coding levels)"
 echo "  - Statusline (bash/zsh)"
 echo "  - gw — git worktree helper with auto-symlinks"
+echo "  - kp — kill-port helper (find & kill process on a port)"
 echo ""
 echo "Next steps:"
 echo "  1. Edit ~/.claude/.env with your API keys (optional)"
