@@ -10,7 +10,7 @@ A pre-configured Claude Code setup for Node.js + React teams. Includes agents, s
 | **Commands**      | 8     | Slash commands (`/cmp`, `/ship`, `/ship-release`, `/fix-ci`, `/fix-pr`, etc.)       |
 | **Hooks**         | 12    | Session management, privacy blocking, quality reminders           |
 | **Rules**         | 5     | Development standards, workflows, orchestration protocols         |
-| **Skills**        | 27    | React, Node.js, testing, git, Prisma, Goose, databases, PR review, and more        |
+| **Skills**        | 28    | React, Node.js, testing, git, Prisma, Goose, databases, PR review, Excalidraw diagrams, and more |
 | **Output Styles** | 6     | Coding level presets (ELI5 to Expert)                             |
 | **Statusline**    | 1     | Real-time session info (bash/zsh)                                 |
 
@@ -47,7 +47,11 @@ The installer will:
 
 ### Frontend (React + Node.js)
 
-`frontend-development` · `ui-styling` · `web-frameworks` · `web-testing` · `react-best-practices` · `mermaidjs-v11`
+`frontend-development` · `ui-styling` · `web-frameworks` · `web-testing` · `react-best-practices`
+
+### Diagrams
+
+`mermaidjs-v11` · `excalidraw-skill` (programmatic Excalidraw canvas via MCP — requires running canvas server)
 
 ### Backend
 
@@ -103,10 +107,13 @@ Copy `.env.example` to `.env` and fill in:
 
 ### `.mcp.json` — MCP servers (optional)
 
-Copy `.mcp.json.example` to `.mcp.json` and configure:
+The installer can configure global MCP servers (scope: user) interactively:
 
 - `context7` — Library docs lookup
 - `sequential-thinking` — Step-by-step reasoning
+- `chrome-devtools` — Browser debugging
+- `atlassian` — Jira/Confluence (HTTP)
+- `excalidraw` — Programmatic canvas drawing for `excalidraw-skill` (requires Docker)
 
 ## Directory Structure
 

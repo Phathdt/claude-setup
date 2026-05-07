@@ -157,35 +157,61 @@ fi
 # Optional: Set up global MCP servers
 # -------------------------------------------
 if command -v claude &>/dev/null; then
-  # Check if any MCP servers already exist
-  EXISTING_MCP=$(claude mcp list 2>/dev/null | grep -c "." || true)
-  if [ "$EXISTING_MCP" -lt 2 ]; then
-    read -p "Set up global MCP servers? (context7, sequential-thinking, etc.) [y/N] " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-      info "Adding MCP servers (scope: user)..."
+  read -p "Set up global MCP servers? (context7, sequential-thinking, excalidraw, etc.) [y/N] " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    info "Adding missing MCP servers (scope: user)..."
 
-      # context7 — library/framework docs lookup
-      claude mcp add -s user context7 -- npx -y @upstash/context7-mcp@latest 2>/dev/null && \
-        ok "Added: context7" || warn "Failed to add context7"
+    MCP_LIST=$(claude mcp list 2>/dev/null || true)
 
-      # sequential-thinking — step-by-step reasoning
-      claude mcp add -s user sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking 2>/dev/null && \
-        ok "Added: sequential-thinking" || warn "Failed to add sequential-thinking"
+    add_mcp_if_missing() {
+      local name="$1"
+      shift
+      if echo "$MCP_LIST" | grep -q "^$name:"; then
+        info "Skipped: $name (already configured)"
+      else
+        if claude mcp add -s user "$name" "$@" 2>/dev/null; then
+          ok "Added: $name"
+        else
+          warn "Failed to add $name"
+        fi
+      fi
+    }
 
-      # chrome-devtools — browser debugging
-      claude mcp add -s user chrome-devtools -- npx -y chrome-devtools-mcp@latest 2>/dev/null && \
-        ok "Added: chrome-devtools" || warn "Failed to add chrome-devtools"
+    add_mcp_http_if_missing() {
+      local name="$1"
+      local url="$2"
+      if echo "$MCP_LIST" | grep -q "^$name:"; then
+        info "Skipped: $name (already configured)"
+      else
+        if claude mcp add -s user -t http "$name" "$url" 2>/dev/null; then
+          ok "Added: $name"
+        else
+          warn "Failed to add $name"
+        fi
+      fi
+    }
 
-      # atlassian — Jira/Confluence
-      claude mcp add -s user -t http atlassian https://mcp.atlassian.com/v1/mcp 2>/dev/null && \
-        ok "Added: atlassian" || warn "Failed to add atlassian"
+    # context7 — library/framework docs lookup
+    add_mcp_if_missing context7 -- npx -y @upstash/context7-mcp@latest
 
-      ok "MCP servers configured globally."
-      info "Verify with: claude mcp list"
-    fi
-  else
-    info "Global MCP servers already configured ($EXISTING_MCP found). Skipping."
+    # sequential-thinking — step-by-step reasoning
+    add_mcp_if_missing sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
+
+    # chrome-devtools — browser debugging
+    add_mcp_if_missing chrome-devtools -- npx -y chrome-devtools-mcp@latest
+
+    # atlassian — Jira/Confluence (HTTP transport)
+    add_mcp_http_if_missing atlassian https://mcp.atlassian.com/v1/mcp
+
+    # excalidraw — diagram/canvas drawing (requires Docker)
+    add_mcp_if_missing excalidraw -- docker run -i --rm \
+      -e EXPRESS_SERVER_URL=http://host.docker.internal:3000 \
+      -e ENABLE_CANVAS_SYNC=true \
+      ghcr.io/yctimlin/mcp_excalidraw:latest
+
+    ok "MCP servers configured globally."
+    info "Verify with: claude mcp list"
   fi
 else
   warn "Claude CLI not found. Install it first to configure MCP servers."
@@ -256,7 +282,7 @@ echo "  - 9 agent definitions"
 echo "  - 8 slash commands (/cmp, /ship, /review-pr, /fix-ci, etc.)"
 echo "  - 12 hooks (session mgmt, privacy, quality)"
 echo "  - 5 rule sets (dev standards, workflows)"
-echo "  - 27 skills (React, Node.js, testing, git, Prisma, Goose, PR review, etc.)"
+echo "  - 28 skills (React, Node.js, testing, git, Prisma, Goose, PR review, Excalidraw diagrams, etc.)"
 echo "  - 6 output styles (coding levels)"
 echo "  - Statusline (bash/zsh)"
 echo "  - gw — git worktree helper with auto-symlinks"
